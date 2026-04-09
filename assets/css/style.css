@@ -520,23 +520,23 @@ body {
    ============================= */
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
 }
 
 .chart-card {
     background: var(--white);
-    border-radius: 20px;
-    padding: 28px 24px;
+    border-radius: 12px;
+    padding: 12px 12px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
 }
 
 .chart-card h3 {
     color: var(--text-dark);
-    margin-bottom: 20px;
-    font-size: 17px;
+    margin-bottom: 10px;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -695,6 +695,24 @@ body {
     color: white;
     border-color: var(--primary);
     transform: translateY(-2px);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-link:hover {
+    background: var(--primary-pale);
+    color: var(--primary-dark);
+    text-decoration: underline;
 }
 
 /* =============================
@@ -1080,5 +1098,97 @@ body {
     .btn-action {
         padding: 7px 10px;
         border-radius: 10px;
+    }
+}
+
+/* =============================
+   ITEM PRICE HIGHLIGHT
+   ============================= */
+.item-price {
+    font-weight: 700;
+    color: var(--primary-dark);
+    white-space: nowrap;
+}
+
+/* =============================
+   PAGINATION
+   ============================= */
+.pagination-container {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 24px 28px;
+    margin-top: 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.pagination-info {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.pagination-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.pagination-buttons .btn-primary,
+.pagination-buttons .btn-secondary {
+    padding: 10px 22px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.pagination-buttons .btn-disabled {
+    padding: 10px 22px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 120px;
+    justify-content: center;
+    background: var(--primary-pale);
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+    border-radius: 40px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.page-indicator {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    padding: 8px 20px;
+    background: var(--primary-pale);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    min-width: 100px;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .pagination-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .pagination-buttons .btn-primary,
+    .pagination-buttons .btn-secondary,
+    .pagination-buttons .btn-disabled {
+        width: 100%;
+        min-width: auto;
     }
 }

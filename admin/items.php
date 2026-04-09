@@ -2,95 +2,286 @@
 require_once __DIR__ . '/../includes/auth.php';
 redirectIfNotAdmin();
 
-// Handle Add Item
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_item'])) {
-    $stmt = $pdo->prepare("INSERT INTO items (item_name, flavor_id, size_id, base_price, is_active) VALUES (?, ?, ?, ?, 1)");
-    $stmt->execute([$_POST['item_name'], $_POST['flavor_id'], $_POST['size_id'], $_POST['base_price']]);
-    header("Location: items.php?msg=Item added successfully");
-    exit();
+// Handle form submissions
+$message = '';
+$message_type = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'add') {
+        $item_name = trim($_POST['item_name'] ?? '');
+        $flavor_id = (int)($_POST['flavor_id'] ?? 0);
+        $size_id = (int)($_POST['size_id'] ?? 0);
+        $base_price = (float)($_POST['base_price'] ?? 0);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        
+        if ($item_name && $flavor_id && $size_id && $base_price > 0) {
+            $stmt = $pdo->prepare("INSERT INTO items (item_name, flavor_id, size_id, base_price, is_active) VALUES (?, ?, ?, ?, ?)");
+            if ($stmt->execute([$item_name, $flavor_id, $size_id, $base_price, $is_active])) {
+                $message = 'Item added successfully!';
+                $message_type = 'success';
+            } else {
+                $message = 'Failed to add item. Please try again.';
+                $message_type = 'error';
+            }
+        } else {
+            $message = 'Please fill in all required fields.';
+            $message_type = 'error';
+        }
+    }
+    
+    if ($action === 'edit') {
+        $item_id = (int)($_POST['item_id'] ?? 0);
+        $item_name = trim($_POST['item_name'] ?? '');
+        $flavor_id = (int)($_POST['flavor_id'] ?? 0);
+        $size_id = (int)($_POST['size_id'] ?? 0);
+        $base_price = (float)($_POST['base_price'] ?? 0);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        
+        if ($item_id && $item_name && $flavor_id && $size_id && $base_price > 0) {
+            $stmt = $pdo->prepare("UPDATE items SET item_name = ?, flavor_id = ?, size_id = ?, base_price = ?, is_active = ? WHERE item_id = ?");
+            if ($stmt->execute([$item_name, $flavor_id, $size_id, $base_price, $is_active, $item_id])) {
+                $message = 'Item updated successfully!';
+                $message_type = 'success';
+            } else {
+                $message = 'Failed to update item. Please try again.';
+                $message_type = 'error';
+            }
+        } else {
+            $message = 'Please fill in all required fields.';
+            $message_type = 'error';
+        }
+    }
+    
+    if ($action === 'delete') {
+        $item_id = (int)($_POST['item_id'] ?? 0);
+        if ($item_id) {
+            $stmt = $pdo->prepare("DELETE FROM items WHERE item_id = ?");
+            if ($stmt->execute([$item_id])) {
+                $message = 'Item deleted successfully!';
+                $message_type = 'success';
+            } else {
+                $message = 'Failed to delete item. Please try again.';
+                $message_type = 'error';
+            }
+        }
+    }
+    
+    if ($action === 'toggle_status') {
+        $item_id = (int)($_POST['item_id'] ?? 0);
+        if ($item_id) {
+            $stmt = $pdo->prepare("UPDATE items SET is_active = NOT is_active WHERE item_id = ?");
+            if ($stmt->execute([$item_id])) {
+                $message = 'Item status updated!';
+                $message_type = 'success';
+            } else {
+                $message = 'Failed to update status. Please try again.';
+                $message_type = 'error';
+            }
+        }
+    }
 }
 
-// Handle Update Item
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_item'])) {
-    $stmt = $pdo->prepare("UPDATE items SET item_name = ?, flavor_id = ?, size_id = ?, base_price = ? WHERE item_id = ?");
-    $stmt->execute([$_POST['item_name'], $_POST['flavor_id'], $_POST['size_id'], $_POST['base_price'], $_POST['item_id']]);
-    header("Location: items.php?msg=Item updated successfully");
-    exit();
+// Get filter parameters
+$filter_flavor = $_GET['flavor'] ?? '';
+$filter_size = $_GET['size'] ?? '';
+$filter_status = $_GET['status'] ?? '';
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$perPage = 10;
+$offset = ($page - 1) * $perPage;
+
+// Build WHERE clause
+$whereClause = "WHERE 1=1";
+$params = [];
+if ($filter_flavor) { $whereClause .= " AND i.flavor_id = ?"; $params[] = $filter_flavor; }
+if ($filter_size) { $whereClause .= " AND i.size_id = ?"; $params[] = $filter_size; }
+if ($filter_status !== '') { $whereClause .= " AND i.is_active = ?"; $params[] = (int)$filter_status; }
+
+// Get total count
+$countSql = "SELECT COUNT(*) FROM items i {$whereClause}";
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($params);
+$totalRecords = $countStmt->fetchColumn();
+$totalPages = ceil($totalRecords / $perPage);
+
+// Get paginated items
+$sql = "SELECT i.*, f.flavor_name, s.size_name, s.price_multiplier
+        FROM items i
+        JOIN flavors f ON i.flavor_id = f.flavor_id
+        JOIN item_sizes s ON i.size_id = s.size_id
+        {$whereClause}
+        ORDER BY i.item_id DESC
+        LIMIT :limit OFFSET :offset";
+$stmt = $pdo->prepare($sql);
+foreach ($params as $i => $param) {
+    $stmt->bindValue($i + 1, $param);
 }
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$items = $stmt->fetchAll();
 
-// Handle Delete Item
-if (isset($_GET['delete'])) {
-    $stmt = $pdo->prepare("DELETE FROM items WHERE item_id = ?");
-    $stmt->execute([$_GET['delete']]);
-    header("Location: items.php?msg=Item deleted successfully");
-    exit();
-}
+// Get flavors and sizes for filters and forms
+$flavors = $pdo->query("SELECT * FROM flavors ORDER BY flavor_name")->fetchAll();
+$sizes = $pdo->query("SELECT * FROM item_sizes ORDER BY size_name")->fetchAll();
 
-// Handle Toggle Status
-if (isset($_GET['toggle'])) {
-    $stmt = $pdo->prepare("UPDATE items SET is_active = NOT is_active WHERE item_id = ?");
-    $stmt->execute([$_GET['toggle']]);
-    header("Location: items.php?msg=Item status updated");
-    exit();
-}
-
-// Get all items
-$items = $pdo->query("SELECT i.*, f.flavor_name, s.size_name
-                      FROM items i
-                      JOIN flavors f ON i.flavor_id = f.flavor_id
-                      JOIN item_sizes s ON i.size_id = s.size_id
-                      ORDER BY i.item_id DESC")->fetchAll();
-
-$flavors = $pdo->query("SELECT * FROM flavors")->fetchAll();
-$sizes = $pdo->query("SELECT * FROM item_sizes")->fetchAll();
-
-$editItem = null;
+// Get edit item if requested
+$edit_item = null;
 if (isset($_GET['edit'])) {
+    $edit_id = (int)$_GET['edit'];
     $stmt = $pdo->prepare("SELECT * FROM items WHERE item_id = ?");
-    $stmt->execute([$_GET['edit']]);
-    $editItem = $stmt->fetch();
+    $stmt->execute([$edit_id]);
+    $edit_item = $stmt->fetch();
 }
-
-$success_msg = $_GET['msg'] ?? '';
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
-        <h1><i class="fas fa-ice-cream"></i> Menu Items Management</h1>
-        <button class="btn-primary" onclick="document.getElementById('addModal').style.display='flex'">
-            <i class="fas fa-plus"></i> Add New Item
-        </button>
+        <h1><i class="fas fa-ice-cream"></i> Menu Items</h1>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span><?= htmlspecialchars($_SESSION['fullname']) ?></span>
+            <span class="branch-badge">Admin</span>
+        </div>
     </div>
 
-    <?php if($success_msg): ?>
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($success_msg) ?></div>
+    <?php if ($message): ?>
+    <div class="alert alert-<?= $message_type ?>">
+        <i class="fas fa-<?= $message_type === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
+        <?= htmlspecialchars($message) ?>
+    </div>
     <?php endif; ?>
 
+    <!-- Filter Form -->
+    <div class="filter-card">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label><i class="fas fa-candy-cane"></i> Flavor</label>
+                <select name="flavor">
+                    <option value="">All Flavors</option>
+                    <?php foreach ($flavors as $f): ?>
+                    <option value="<?= $f['flavor_id'] ?>" <?= $filter_flavor == $f['flavor_id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($f['flavor_name']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-ruler"></i> Size</label>
+                <select name="size">
+                    <option value="">All Sizes</option>
+                    <?php foreach ($sizes as $s): ?>
+                    <option value="<?= $s['size_id'] ?>" <?= $filter_size == $s['size_id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($s['size_name']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-toggle-on"></i> Status</label>
+                <select name="status">
+                    <option value="">All</option>
+                    <option value="1" <?= $filter_status === '1' ? 'selected' : '' ?>>Active</option>
+                    <option value="0" <?= $filter_status === '0' ? 'selected' : '' ?>>Inactive</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-primary"><i class="fas fa-search"></i> Filter</button>
+                <a href="items.php" class="btn-secondary"><i class="fas fa-rotate-left"></i> Reset</a>
+                <?php if (!$edit_item): ?>
+                <button type="button" class="btn-primary" onclick="document.getElementById('addModal').style.display='flex'">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+                <?php else: ?>
+                <a href="items.php" class="btn-secondary"><i class="fas fa-times"></i> Cancel Edit</a>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary stats -->
     <div class="stats-grid" style="margin-bottom: 24px;">
         <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-ice-cream"></i></div>
-            <div class="stat-value"><?= count($items) ?></div>
-            <div class="stat-label">Total Menu Items</div>
+            <div class="stat-icon"><i class="fas fa-box"></i></div>
+            <div class="stat-value"><?= number_format($totalRecords) ?></div>
+            <div class="stat-label">Total Items</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-value"><?= count(array_filter($items, fn($i) => $i['is_active'])) ?></div>
+            <div class="stat-value"><?= $pdo->query("SELECT COUNT(*) FROM items WHERE is_active = 1")->fetchColumn() ?></div>
             <div class="stat-label">Active Items</div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-ban"></i></div>
-            <div class="stat-value"><?= count(array_filter($items, fn($i) => !$i['is_active'])) ?></div>
+            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+            <div class="stat-value"><?= $pdo->query("SELECT COUNT(*) FROM items WHERE is_active = 0")->fetchColumn() ?></div>
             <div class="stat-label">Inactive Items</div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-tag"></i></div>
-            <div class="stat-value"><?= count($flavors) ?></div>
-            <div class="stat-label">Flavors</div>
+            <div class="stat-icon"><i class="fas fa-coins"></i></div>
+            <div class="stat-value">₱<?= number_format($items ? min(array_column($items, 'base_price')) : 0, 2) ?></div>
+            <div class="stat-label">Lowest Price (Page)</div>
         </div>
     </div>
 
+    <?php if ($edit_item): ?>
+    <!-- Edit Form -->
+    <div class="data-table" style="margin-bottom: 24px;">
+        <h3 style="padding: 20px 20px 0; color: var(--text-dark);">
+            <i class="fas fa-edit" style="color: var(--primary); margin-right: 8px;"></i>Edit Item
+        </h3>
+        <form method="POST" style="padding: 20px;">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="item_id" value="<?= $edit_item['item_id'] ?>">
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" name="item_name" value="<?= htmlspecialchars($edit_item['item_name']) ?>" required>
+                </div>
+                <div class="form-group">
+                    <label>Flavor *</label>
+                    <select name="flavor_id" required>
+                        <?php foreach ($flavors as $f): ?>
+                        <option value="<?= $f['flavor_id'] ?>" <?= $edit_item['flavor_id'] == $f['flavor_id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($f['flavor_name']) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Size *</label>
+                    <select name="size_id" required>
+                        <?php foreach ($sizes as $s): ?>
+                        <option value="<?= $s['size_id'] ?>" <?= $edit_item['size_id'] == $s['size_id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($s['size_name']) ?> (x<?= number_format($s['price_multiplier'], 2) ?>)
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Base Price (₱) *</label>
+                    <input type="number" step="0.01" min="0" name="base_price" value="<?= $edit_item['base_price'] ?>" required>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="is_active" <?= $edit_item['is_active'] ? 'checked' : '' ?> style="width: auto;">
+                        Active
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 12px;">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Update Item</button>
+                <a href="items.php" class="btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </form>
+    </div>
+    <?php endif; ?>
+
+    <!-- Items Table -->
     <div class="data-table">
         <table>
             <thead>
@@ -99,139 +290,179 @@ $success_msg = $_GET['msg'] ?? '';
                     <th>Item Name</th>
                     <th>Flavor</th>
                     <th>Size</th>
-                    <th>Price</th>
+                    <th>Base Price</th>
+                    <th>Multiplier</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($items as $item): ?>
+                <?php foreach ($items as $item): ?>
                 <tr>
-                    <td><?= $item['item_id'] ?></td>
+                    <td><span class="status-badge status-active"><?= $item['item_id'] ?></span></td>
                     <td><strong><?= htmlspecialchars($item['item_name']) ?></strong></td>
                     <td><?= htmlspecialchars($item['flavor_name']) ?></td>
                     <td><?= htmlspecialchars($item['size_name']) ?></td>
                     <td class="item-price">₱<?= number_format($item['base_price'], 2) ?></td>
+                    <td>x<?= number_format($item['price_multiplier'], 2) ?></td>
                     <td>
-                        <span class="status-badge <?= $item['is_active'] ? 'status-active' : 'status-inactive' ?>">
-                            <?= $item['is_active'] ? 'Active' : 'Inactive' ?>
-                        </span>
+                        <?php if ($item['is_active']): ?>
+                        <span class="status-badge status-active"><i class="fas fa-check-circle"></i> Active</span>
+                        <?php else: ?>
+                        <span class="status-badge status-inactive"><i class="fas fa-times-circle"></i> Inactive</span>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <div class="action-btns">
-                            <a href="?edit=<?= $item['item_id'] ?>" class="btn-action btn-edit" title="Edit Item">
-                                <i class="fas fa-pen"></i> <span>Edit</span>
+                            <a href="?edit=<?= $item['item_id'] ?>" class="btn-action btn-edit" title="Edit">
+                                <i class="fas fa-edit"></i> <span>Edit</span>
                             </a>
-                            <a href="?toggle=<?= $item['item_id'] ?>" class="btn-action btn-toggle" title="<?= $item['is_active'] ? 'Deactivate' : 'Activate' ?> Item" onclick="return confirm('Toggle status of this item?')">
-                                <i class="fas fa-<?= $item['is_active'] ? 'toggle-on' : 'toggle-off' ?>"></i> <span><?= $item['is_active'] ? 'Active' : 'Inactive' ?></span>
-                            </a>
-                            <a href="?delete=<?= $item['item_id'] ?>" class="btn-action btn-delete" title="Delete Item" onclick="return confirm('Delete this item permanently? This cannot be undone.')">
-                                <i class="fas fa-trash-alt"></i> <span>Delete</span>
-                            </a>
+                            <form method="POST" style="display: inline;">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
+                                <button type="submit" class="btn-action btn-toggle" title="<?= $item['is_active'] ? 'Deactivate' : 'Activate' ?>">
+                                    <i class="fas fa-<?= $item['is_active'] ? 'toggle-on' : 'toggle-off' ?>"></i> <span><?= $item['is_active'] ? 'Deactivate' : 'Activate' ?></span>
+                                </button>
+                            </form>
+                            <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
+                                <button type="submit" class="btn-action btn-delete" title="Delete">
+                                    <i class="fas fa-trash"></i> <span>Delete</span>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
-                <?php if(count($items) == 0): ?>
-                <tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fas fa-ice-cream" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
-                    No items found. Click "Add New Item" to create one.
+                <?php if (count($items) == 0): ?>
+                <tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
+                    No items found
                 </td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <!-- Add Item Modal -->
-    <div id="addModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content">
-            <h3 style="color: var(--primary-darker); margin-bottom: 20px;"><i class="fas fa-plus-circle"></i> Add New Item</h3>
-            <form method="POST">
-                <div class="form-group">
-                    <label>Item Name</label>
-                    <input type="text" name="item_name" placeholder="e.g., Soft Serve, Milkshake, Sundae" required>
-                </div>
-                <div class="form-group">
-                    <label>Flavor</label>
-                    <select name="flavor_id" required>
-                        <option value="">Select Flavor</option>
-                        <?php foreach($flavors as $f): ?>
-                        <option value="<?= $f['flavor_id'] ?>"><?= htmlspecialchars($f['flavor_name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Size</label>
-                    <select name="size_id" required>
-                        <option value="">Select Size</option>
-                        <?php foreach($sizes as $s): ?>
-                        <option value="<?= $s['size_id'] ?>"><?= htmlspecialchars($s['size_name']) ?> (x<?= $s['price_multiplier'] ?>)</option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Base Price (₱)</label>
-                    <input type="number" step="0.01" name="base_price" placeholder="0.00" required>
-                </div>
-                <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button type="submit" name="add_item" class="btn-primary"><i class="fas fa-save"></i> Add Item</button>
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('addModal').style.display='none'">Cancel</button>
-                </div>
-            </form>
+    <!-- Pagination -->
+    <?php if ($totalPages > 1): ?>
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <?= count($items) ?> of <?= number_format($totalRecords) ?> items (Page <?= $page ?> of <?= $totalPages ?>)
         </div>
-    </div>
+        <div class="pagination-buttons">
+            <?php
+            $queryString = http_build_query(array_filter([
+                'flavor' => $filter_flavor,
+                'size' => $filter_size,
+                'status' => $filter_status
+            ]));
+            $separator = $queryString ? '&' : '';
+            ?>
 
-    <!-- Edit Item Modal -->
-    <?php if($editItem): ?>
-    <div id="editModal" class="modal-overlay" style="display: flex;" onclick="if(event.target===this) window.location='items.php'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="color: var(--primary-darker); margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Item</h3>
-            <form method="POST">
-                <input type="hidden" name="item_id" value="<?= $editItem['item_id'] ?>">
-                <div class="form-group">
-                    <label>Item Name</label>
-                    <input type="text" name="item_name" value="<?= htmlspecialchars($editItem['item_name']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label>Flavor</label>
-                    <select name="flavor_id" required>
-                        <?php foreach($flavors as $f): ?>
-                        <option value="<?= $f['flavor_id'] ?>" <?= $f['flavor_id'] == $editItem['flavor_id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($f['flavor_name']) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Size</label>
-                    <select name="size_id" required>
-                        <?php foreach($sizes as $s): ?>
-                        <option value="<?= $s['size_id'] ?>" <?= $s['size_id'] == $editItem['size_id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($s['size_name']) ?> (x<?= $s['price_multiplier'] ?>)
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Base Price (₱)</label>
-                    <input type="number" step="0.01" name="base_price" value="<?= $editItem['base_price'] ?>" required>
-                </div>
-                <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button type="submit" name="update_item" class="btn-primary"><i class="fas fa-save"></i> Update Item</button>
-                    <a href="items.php" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center;">Cancel</a>
-                </div>
-            </form>
+            <?php if ($page > 1): ?>
+                <a href="?page=<?= $page - 1 ?><?= $separator ? $separator . $queryString : '' ?>" class="btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            <?php else: ?>
+                <span class="btn-disabled" style="opacity: 0.5; cursor: not-allowed;">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </span>
+            <?php endif; ?>
+
+            <span class="page-indicator"><?= $page ?> / <?= $totalPages ?></span>
+
+            <?php if ($page < $totalPages): ?>
+                <a href="?page=<?= $page + 1 ?><?= $separator ? $separator . $queryString : '' ?>" class="btn-primary">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            <?php else: ?>
+                <span class="btn-disabled" style="opacity: 0.5; cursor: not-allowed;">
+                    Next <i class="fas fa-chevron-right"></i>
+                </span>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
 </div>
 
+<!-- Add Item Modal -->
+<div id="addModal" class="modal-overlay">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="color: var(--text-dark); margin: 0;">
+                <i class="fas fa-plus-circle" style="color: var(--primary);"></i> Add New Item
+            </h2>
+            <button onclick="document.getElementById('addModal').style.display='none'" style="background: none; border: none; cursor: pointer; font-size: 24px; color: var(--text-muted);">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form method="POST">
+            <input type="hidden" name="action" value="add">
+            
+            <div class="form-group">
+                <label>Item Name *</label>
+                <input type="text" name="item_name" placeholder="e.g., Soft Serve, Milkshake" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Flavor *</label>
+                <select name="flavor_id" required>
+                    <option value="">Select flavor...</option>
+                    <?php foreach ($flavors as $f): ?>
+                    <option value="<?= $f['flavor_id'] ?>"><?= htmlspecialchars($f['flavor_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Size *</label>
+                <select name="size_id" required>
+                    <option value="">Select size...</option>
+                    <?php foreach ($sizes as $s): ?>
+                    <option value="<?= $s['size_id'] ?>"><?= htmlspecialchars($s['size_name']) ?> (x<?= number_format($s['price_multiplier'], 2) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Base Price (₱) *</label>
+                <input type="number" step="0.01" min="0" name="base_price" placeholder="0.00" required>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" name="is_active" checked style="width: auto;">
+                    Active
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> Add Item
+                </button>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('addModal').style.display='none'">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+// Close modal when clicking outside
+document.getElementById('addModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+});
+
+// Close modal with Escape key
 document.addEventListener('keydown', function(e) {
-    if(e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.style.display = 'none';
-        });
+    if (e.key === 'Escape') {
+        document.getElementById('addModal').style.display = 'none';
     }
 });
 </script>
