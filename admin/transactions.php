@@ -4,7 +4,24 @@ redirectIfNotAdmin();
 
 $filter_branch = $_GET['branch'] ?? '';
 $filter_date   = $_GET['date'] ?? '';
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$perPage = 10;
+$offset = ($page - 1) * $perPage;
 
+// Build base WHERE clause for counting and fetching
+$whereClause = "WHERE 1=1";
+$params = [];
+if($filter_branch) { $whereClause .= " AND t.branch_id = ?"; $params[] = $filter_branch; }
+if($filter_date)   { $whereClause .= " AND DATE(t.transaction_date) = ?"; $params[] = $filter_date; }
+
+// Get total count for pagination
+$countSql = "SELECT COUNT(*) FROM transactions t {$whereClause}";
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($params);
+$totalRecords = $countStmt->fetchColumn();
+$totalPages = ceil($totalRecords / $perPage);
+
+// Get paginated transactions
 $sql = "SELECT t.*, c.customer_name, u.fullname as staff, b.branch_name, oc.channel_name, pm.method_name
         FROM transactions t
         JOIN customers c ON t.customer_id = c.customer_id
@@ -12,13 +29,16 @@ $sql = "SELECT t.*, c.customer_name, u.fullname as staff, b.branch_name, oc.chan
         JOIN branches b ON t.branch_id = b.branch_id
         JOIN order_channels oc ON t.channel_id = oc.channel_id
         JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-        WHERE 1=1";
-$params = [];
-if($filter_branch) { $sql .= " AND t.branch_id = ?"; $params[] = $filter_branch; }
-if($filter_date)   { $sql .= " AND DATE(t.transaction_date) = ?"; $params[] = $filter_date; }
-$sql .= " ORDER BY t.transaction_date DESC";
+        {$whereClause}
+        ORDER BY t.transaction_date DESC
+        LIMIT :limit OFFSET :offset";
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+foreach($params as $i => $param) {
+    $stmt->bindValue($i + 1, $param);
+}
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $transactions = $stmt->fetchAll();
 
 $branches = $pdo->query("SELECT * FROM branches")->fetchAll();
@@ -66,12 +86,17 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-receipt"></i></div>
             <div class="stat-value"><?= count($transactions) ?></div>
-            <div class="stat-label">Transactions Found</div>
+            <div class="stat-label">Transactions on Page <?= $page ?></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-database"></i></div>
+            <div class="stat-value"><?= number_format($totalRecords) ?></div>
+            <div class="stat-label">Total Records</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-coins"></i></div>
             <div class="stat-value">₱<?= number_format($totalRevenue, 2) ?></div>
-            <div class="stat-label">Total Revenue</div>
+            <div class="stat-label">Page Revenue</div>
         </div>
     </div>
 
@@ -111,6 +136,47 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination Controls -->
+    <?php if($totalPages > 1): ?>
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <?= count($transactions) ?> of <?= number_format($totalRecords) ?> transactions (Page <?= $page ?> of <?= $totalPages ?>)
+        </div>
+        <div class="pagination-buttons">
+            <?php
+            // Build query string preserving filters
+            $queryString = http_build_query(array_filter([
+                'branch' => $filter_branch,
+                'date' => $filter_date
+            ]));
+            $separator = $queryString ? '&' : '';
+            ?>
+            
+            <?php if($page > 1): ?>
+                <a href="?page=<?= $page - 1 ?><?= $separator ? $separator . $queryString : '' ?>" class="btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            <?php else: ?>
+                <span class="btn-disabled" style="opacity: 0.5; cursor: not-allowed;">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </span>
+            <?php endif; ?>
+
+            <span class="page-indicator"><?= $page ?> / <?= $totalPages ?></span>
+
+            <?php if($page < $totalPages): ?>
+                <a href="?page=<?= $page + 1 ?><?= $separator ? $separator . $queryString : '' ?>" class="btn-primary">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            <?php else: ?>
+                <span class="btn-disabled" style="opacity: 0.5; cursor: not-allowed;">
+                    Next <i class="fas fa-chevron-right"></i>
+                </span>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
