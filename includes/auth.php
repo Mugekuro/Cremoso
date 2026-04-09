@@ -27,7 +27,7 @@ function isStaff() {
 // Redirect if not logged in
 function redirectIfNotLoggedIn() {
     if (!isLoggedIn()) {
-        header('Location: /cremoso_system/login.php');
+        header('Location: /login.php');
         exit();
     }
 }
@@ -35,7 +35,7 @@ function redirectIfNotLoggedIn() {
 // Redirect if not admin
 function redirectIfNotAdmin() {
     if (!isAdmin()) {
-        header('Location: /cremoso_system/index.php');
+        header('Location: /index.php');
         exit();
     }
 }
@@ -43,7 +43,7 @@ function redirectIfNotAdmin() {
 // Redirect if not staff
 function redirectIfNotStaff() {
     if (!isStaff()) {
-        header('Location: /cremoso_system/index.php');
+        header('Location: /index.php');
         exit();
     }
 }
