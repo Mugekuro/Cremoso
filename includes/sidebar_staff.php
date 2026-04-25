@@ -1,5 +1,18 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
+
+// Get pending orders count for notification badge (with fallback)
+$pendingCount = 0;
+if (isset($_SESSION['branch_id'])) {
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE branch_id = ? AND status = 'pending'");
+        $stmt->execute([$_SESSION['branch_id']]);
+        $pendingCount = $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        // If status column doesn't exist yet, show 0
+        $pendingCount = 0;
+    }
+}
 ?>
 <div class="sidebar">
     <div class="sidebar-logo">
@@ -16,6 +29,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </a>
         <a href="new_order.php" class="<?= $current_page == 'new_order.php' ? 'active' : '' ?>">
             <i class="fas fa-cart-plus"></i> <span>New Order</span>
+        </a>
+        <a href="pending_orders.php" class="<?= $current_page == 'pending_orders.php' ? 'active' : '' ?>">
+            <i class="fas fa-clock"></i> 
+            <span>Pending Orders</span>
+            <?php if($pendingCount > 0): ?>
+            <span class="notification-badge"><?= $pendingCount ?></span>
+            <?php endif; ?>
         </a>
         <a href="daily_log.php" class="<?= $current_page == 'daily_log.php' ? 'active' : '' ?>">
             <i class="fas fa-calendar-day"></i> <span>Daily Log</span>

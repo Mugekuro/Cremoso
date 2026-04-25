@@ -109,8 +109,11 @@ include __DIR__ . '/../includes/sidebar_staff.php';
                     <strong style="color: var(--primary-darker);">Total: ₱<span id="summaryTotal">0.00</span></strong>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-check-circle"></i> Complete Order
+                    <i class="fas fa-clock"></i> Create Pending Order
                 </button>
+                <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 8px; line-height: 1.4;">
+                    Order will be placed in pending queue for payment confirmation
+                </p>
             </div>
         </div>
     </form>

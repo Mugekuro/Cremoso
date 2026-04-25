@@ -32,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         $pdo->beginTransaction();
 
-        // Insert transaction
-        $stmt = $pdo->prepare("INSERT INTO transactions (order_number, customer_id, user_id, branch_id, channel_id, payment_method_id, total_amount) VALUES (?,?,?,?,?,?,?)");
-        $stmt->execute([$order_number, $customer_id, $user_id, $branch_id, $channel_id, $payment_method_id, $total]);
+        // Insert transaction as pending
+        $stmt = $pdo->prepare("INSERT INTO transactions (order_number, customer_id, user_id, branch_id, channel_id, payment_method_id, total_amount, status) VALUES (?,?,?,?,?,?,?,?)");
+        $stmt->execute([$order_number, $customer_id, $user_id, $branch_id, $channel_id, $payment_method_id, $total, 'pending']);
         $transaction_id = $pdo->lastInsertId();
 
         // Insert transaction items
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         $pdo->commit();
-        header("Location: daily_log.php?msg=" . urlencode("Order saved! Order#: $order_number"));
+        header("Location: pending_orders.php?msg=" . urlencode("Order created and placed in pending queue! Order#: $order_number"));
         exit();
     } catch(Exception $e) {
         $pdo->rollBack();
