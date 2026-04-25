@@ -60,12 +60,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <button type="submit" class="login-btn">Sign In</button>
             </form>
             
+
+            <!--
             <div class="mt-4" style="font-size: 12px; color: #999;">
                 <strong>Demo Credentials:</strong><br>
                 Admin: admin / admin<br>
                 Staff 1: staff1 / staff1<br>
                 Staff 2: staff2 / staff2
-            </div>
+            </div> -->
         </div>
     </div>
 </body>

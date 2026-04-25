@@ -115,7 +115,7 @@ $orderTrendValues = array_map(fn($r) => $r['orders'], $weeklyTrend);
     </div>
 
     <!-- Two-Column: Recent Transactions + Top Items -->
-    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-top: 24px;">
+    <div class="dashboard-two-column">
         <?php if (count($recentTxns) > 0): ?>
         <div class="data-table">
             <h3 style="padding: 20px 20px 0; color: var(--text-dark);"><i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i>Recent Transactions</h3>

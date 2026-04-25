@@ -236,7 +236,7 @@ if (isset($_GET['edit'])) {
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="item_id" value="<?= $edit_item['item_id'] ?>">
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Item Name *</label>
                     <input type="text" name="item_name" value="<?= htmlspecialchars($edit_item['item_name']) ?>" required>

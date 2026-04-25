@@ -97,8 +97,8 @@ CREATE TABLE transaction_items (
 
 -- Insert data
 INSERT INTO branches (branch_name, location) VALUES
-('Cremoso HQ (Main)', 'Malaybalay City - Poblacion'),
-('Cremoso Downtown Branch', 'Malaybalay City - Downtown Area');
+('Cremoso HQ (Main)', 'Malaybalay City'),
+('Cremoso Branch', 'Malaybalay City');
 
 INSERT INTO order_channels (channel_name) VALUES
 ('Walk-in'), ('Facebook Messenger'), ('Foodpanda');
@@ -127,7 +127,7 @@ INSERT INTO items (item_name, flavor_id, size_id, base_price) VALUES
 INSERT INTO users (username, fullname, password, role, branch_id) VALUES
 ('admin', 'Admin User', 'admin', 'admin', NULL),
 ('staff1', 'Maria Staff - HQ', 'staff1', 'staff', 1),
-('staff2', 'John Staff - Downtown', 'staff2', 'staff', 2);
+('staff2', 'John Staff', 'staff2', 'staff', 2);
 
 -- Default customer
 INSERT INTO customers (customer_name, contact) VALUES ('Walk-in Customer', 'N/A');

@@ -219,7 +219,7 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
     </div>
 
     <!-- Pie Charts Row -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;" class="analytics-charts-row">
+    <div class="analytics-pie-charts">
         <!-- Payment Method Breakdown -->
         <div class="chart-card" style="padding: 14px 14px;">
             <h3 style="font-size: 12px; margin-bottom: 8px;"><i class="fas fa-credit-card"></i> Payment Methods</h3>
@@ -266,7 +266,7 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
     </div>
 
     <!-- Two-Column: Top Items + Hourly Sales -->
-    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-top: 24px;">
+    <div class="analytics-two-column">
         <!-- Top Selling Items -->
         <?php if(count($topItems) > 0): ?>
         <div class="data-table">
@@ -348,7 +348,7 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
     <?php endif; ?>
 
     <!-- Branch Performance + Top Customers -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+    <div class="analytics-two-column">
         <!-- Branch Performance -->
         <?php if(count($branchPerf) > 0): ?>
         <div class="data-table">

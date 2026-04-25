@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px;">
+    <div class="profile-two-column">
         <!-- Profile Information -->
         <div class="profile-card" style="max-width: 100%;">
             <h3 style="color: var(--text-dark); margin-bottom: 24px; font-weight: 700;">
