@@ -32,6 +32,20 @@
     --text-muted: #5E9A95;
     /* labels, secondary text */
 
+    /* === STATUS COLORS === */
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-pale: #D1FAE5;
+    --error: #EF4444;
+    --error-dark: #DC2626;
+    --error-pale: #FEE2E2;
+    --warning: #F59E0B;
+    --warning-dark: #D97706;
+    --warning-pale: #FEF3C7;
+    --info: #3B82F6;
+    --info-dark: #2563EB;
+    --info-pale: #DBEAFE;
+
     /* === SHADOWS === */
     --shadow: 0 4px 20px rgba(21, 94, 87, 0.10);
     --shadow-hover: 0 8px 32px rgba(21, 94, 87, 0.18);
@@ -307,6 +321,27 @@ body {
 .sidebar-nav a:hover i,
 .sidebar-nav a.active i {
     color: var(--primary-light);
+}
+
+/* Notification badge for sidebar */
+.notification-badge {
+    background: var(--error);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.2;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 /* =============================
