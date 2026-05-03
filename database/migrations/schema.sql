@@ -30,12 +30,16 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     fullname VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    google_id VARCHAR(255) NULL UNIQUE COMMENT 'Google OAuth ID',
+    email VARCHAR(100) NULL COMMENT 'Email address for Google OAuth',
     role ENUM('admin','staff') NOT NULL,
     branch_id INT NULL,
     is_confirmed BOOLEAN DEFAULT FALSE COMMENT 'Staff accounts need admin approval',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON DELETE SET NULL
+    FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON DELETE SET NULL,
+    INDEX idx_google_id (google_id),
+    INDEX idx_email (email)
 );
 
 -- Order channels

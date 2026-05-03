@@ -134,18 +134,18 @@ $confirmedStaff = $confirmedStmt->fetchAll();
                         <?= date('M j, Y g:i A', strtotime($staff['created_at'])) ?>
                     </td>
                     <td style="text-align: center;">
-                        <form method="POST" style="display: inline-block; margin-right: 8px;">
+                        <form method="POST" style="display: inline-block; margin-right: 8px;" id="confirmForm<?= $staff['user_id'] ?>">
                             <input type="hidden" name="user_id" value="<?= $staff['user_id'] ?>">
-                            <button type="submit" name="confirm_staff" class="btn-success" 
-                                    onclick="return confirm('Confirm this staff account?')"
+                            <button type="button" class="btn-success" 
+                                    onclick="showConfirmModal(<?= $staff['user_id'] ?>)"
                                     style="padding: 8px 16px; font-size: 13px;">
                                 <i class="fas fa-check"></i> Approve
                             </button>
                         </form>
-                        <form method="POST" style="display: inline-block;">
+                        <form method="POST" style="display: inline-block;" id="rejectForm<?= $staff['user_id'] ?>">
                             <input type="hidden" name="user_id" value="<?= $staff['user_id'] ?>">
-                            <button type="submit" name="reject_staff" class="btn-danger" 
-                                    onclick="return confirm('Reject and delete this staff account? This action cannot be undone.')"
+                            <button type="button" class="btn-danger" 
+                                    onclick="showRejectModal(<?= $staff['user_id'] ?>)"
                                     style="padding: 8px 16px; font-size: 13px;">
                                 <i class="fas fa-times"></i> Reject
                             </button>
@@ -232,6 +232,40 @@ $confirmedStaff = $confirmedStmt->fetchAll();
 </div>
 
 
+
+<!-- Confirm Staff Modal -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-content confirm-modal">
+        <div class="confirm-modal-icon" style="background: rgba(46, 204, 113, 0.1);">
+            <i class="fas fa-check-circle" style="color: var(--success);"></i>
+        </div>
+        <h3>Confirm Staff Account?</h3>
+        <p>This staff member will be granted access to the system and can start processing orders.</p>
+        <div class="confirm-modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeConfirmModal()">Cancel</button>
+            <button type="button" class="btn-success" onclick="confirmStaff()">
+                <i class="fas fa-check"></i> Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Staff Modal -->
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal-content confirm-modal">
+        <div class="confirm-modal-icon" style="background: rgba(231, 76, 60, 0.1);">
+            <i class="fas fa-exclamation-triangle" style="color: var(--error);"></i>
+        </div>
+        <h3>Reject and Delete Staff Account?</h3>
+        <p>This action cannot be undone. The staff account will be permanently removed from the system.</p>
+        <div class="confirm-modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeRejectModal()">Cancel</button>
+            <button type="button" class="btn-danger" onclick="confirmReject()">
+                <i class="fas fa-times"></i> Reject & Delete
+            </button>
+        </div>
+    </div>
+</div>
 
 <?php include __DIR__ . '/../includes/revoke_modal.php'; ?>
 
