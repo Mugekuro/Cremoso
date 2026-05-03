@@ -211,6 +211,22 @@ include __DIR__ . '/../includes/sidebar_staff.php';
     </div>
 </div>
 
+<!-- Empty Cart Alert Modal -->
+<div class="modal-overlay" id="emptyCartModal">
+    <div class="modal-box" style="max-width: 400px;">
+        <div class="modal-title" style="color: var(--text-dark); display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i>
+            Cart is Empty
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 15px; color: var(--text-dark); margin: 0;">Please add at least one item to the cart</p>
+        </div>
+        <div class="modal-actions" style="justify-content: flex-end;">
+            <button type="button" class="btn-primary" onclick="closeEmptyCartModal()" style="min-width: 100px;">OK</button>
+        </div>
+    </div>
+</div>
+
 <style>
 .order-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
 .order-panel { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -226,7 +242,7 @@ include __DIR__ . '/../includes/sidebar_staff.php';
 .item-name { font-weight: 600; font-size: 14px; color: var(--text-dark); margin-bottom: 8px; }
 .item-prices { font-size: 13px; color: var(--primary); font-weight: 700; }
 
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; }
 .modal-overlay.active { display: flex !important; }
 .modal-box { background: #fff; border-radius: 16px; padding: 32px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
 .modal-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; }
@@ -400,9 +416,13 @@ function attachCartEvents() {
     });
 }
 
+function closeEmptyCartModal() {
+    document.getElementById('emptyCartModal').classList.remove('active');
+}
+
 document.getElementById('orderForm').addEventListener('submit', function(e) {
     if(cart.length === 0) {
-        alert('Please add at least one item to the cart');
+        document.getElementById('emptyCartModal').classList.add('active');
         e.preventDefault();
         return false;
     }
