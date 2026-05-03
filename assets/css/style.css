@@ -882,6 +882,32 @@ body {
     transform: translateY(0);
 }
 
+.btn-success {
+    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.30);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--success-dark) 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.40);
+}
+
+.btn-success:active {
+    transform: translateY(0);
+}
+
 .btn-secondary {
     background: var(--primary-pale);
     color: var(--primary-darker);
@@ -952,12 +978,19 @@ body {
    STATUS BADGES
    ============================= */
 .status-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     padding: 4px 14px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.status-badge i {
+    flex-shrink: 0;
 }
 
 .status-active,
@@ -1671,7 +1704,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .btn-action {
@@ -1688,11 +1721,12 @@ body {
     text-decoration: none;
     transition: all 0.2s;
     white-space: nowrap;
-    line-height: 1;
+    line-height: 1.2;
 }
 
 .btn-action i {
     font-size: 12px;
+    flex-shrink: 0;
 }
 
 /* Edit � teal */
@@ -1882,6 +1916,23 @@ body {
     font-weight: 700;
     color: var(--primary-dark);
     white-space: nowrap;
+}
+
+/* =============================
+   ITEMS TABLE COLUMN WIDTHS
+   ============================= */
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) {
+    /* STATUS column */
+    min-width: 100px;
+    width: 100px;
+}
+
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
+    /* ACTIONS column */
+    min-width: 280px;
+    width: 280px;
 }
 
 /* =============================

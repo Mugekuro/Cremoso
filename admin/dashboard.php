@@ -180,8 +180,8 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                     <td><?= htmlspecialchars($t['customer_name']) ?></td>
                     <td><?= htmlspecialchars($t['branch_name']) ?></td>
                     <td class="item-price">₱<?= number_format($t['total_amount'], 2) ?></td>
-                    <td><span class="status-badge status-active"><?= htmlspecialchars($t['method_name']) ?></span></td>
-                    <td><span class="status-badge <?= $t['status'] == 'completed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
+                    <td><?= htmlspecialchars($t['method_name']) ?></td>
+                    <td><span class="status-badge <?= $t['status'] == 'completed' ? 'status-completed' : 'status-pending' ?>"><?= ucfirst($t['status']) ?></span></td>
                     <td style="font-size: 12px; color: var(--text-muted);"><?= date('M d, h:i A', strtotime($t['transaction_date'])) ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -299,7 +299,7 @@ if (trendLabels.length > 0) {
             datasets: [{
                 label: 'Orders',
                 data: orderTrendValues,
-                backgroundColor: chartColors.accent1,
+                backgroundColor: chartColors.accent2,
                 borderRadius: 6,
                 barThickness: 24
             }]
