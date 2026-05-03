@@ -22,7 +22,7 @@ $date_end = $date_config['end'] ?? 'CURDATE()';
 $date_label = $date_config['label'];
 
 // Build WHERE clause (always filter by branch for staff)
-$whereClauses = ["transaction_date >= {$date_start}", "DATE(transaction_date) <= {$date_end}", "t.branch_id = ?"];
+$whereClauses = ["transaction_date >= {$date_start}", "DATE(transaction_date) <= {$date_end}", "t.branch_id = ?", "t.status = 'completed'"];
 $params = [$branch_id];
 
 if($filter_channel) { $whereClauses[] = "t.channel_id = ?"; $params[] = $filter_channel; }
@@ -73,19 +73,16 @@ if($report_type == 'daily') {
 // === ITEM PERFORMANCE REPORT ===
 elseif($report_type == 'items') {
     $itemReport = $pdo->prepare("SELECT 
-        i.item_name,
-        f.flavor_name,
-        s.size_name,
+        ti.item_name,
+        ti.category,
+        ti.size,
         SUM(ti.quantity) as qty_sold,
         COALESCE(SUM(ti.subtotal), 0) as revenue,
-        AVG(ti.unit_price) as avg_price
+        AVG(ti.base_price) as avg_price
         FROM transaction_items ti
         JOIN transactions t ON ti.transaction_id = t.transaction_id
-        JOIN items i ON ti.item_id = i.item_id
-        JOIN flavors f ON i.flavor_id = f.flavor_id
-        JOIN item_sizes s ON i.size_id = s.size_id
         {$whereSQL}
-        GROUP BY ti.item_id
+        GROUP BY ti.item_name, ti.category, ti.size
         ORDER BY revenue DESC");
     $itemReport->execute($params);
     $reportData = $itemReport->fetchAll();
@@ -138,9 +135,9 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
             fputcsv($output, [$row['sale_date'], $row['orders'], $row['revenue'], $row['avg_order']]);
         }
     } elseif($report_type == 'items') {
-        fputcsv($output, ['Item Name', 'Flavor', 'Size', 'Qty Sold', 'Revenue', 'Avg Price']);
+        fputcsv($output, ['Item Name', 'Category', 'Size', 'Qty Sold', 'Revenue', 'Avg Price']);
         foreach($reportData as $row) {
-            fputcsv($output, [$row['item_name'], $row['flavor_name'], $row['size_name'], $row['qty_sold'], $row['revenue'], $row['avg_price']]);
+            fputcsv($output, [$row['item_name'], $row['category'], $row['size'], $row['qty_sold'], $row['revenue'], $row['avg_price']]);
         }
     } else {
         fputcsv($output, ['Name', 'Orders', 'Revenue', 'Avg Order']);
@@ -263,7 +260,7 @@ include __DIR__ . '/../includes/sidebar_staff.php'; ?>
                     <?php
                     match($report_type) {
                         'daily' => print('<th>Date</th><th>Orders</th><th>Revenue</th><th>Avg Order</th>'),
-                        'items' => print('<th>Item</th><th>Flavor</th><th>Size</th><th>Qty Sold</th><th>Revenue</th><th>Avg Price</th>'),
+                        'items' => print('<th>Item</th><th>Category</th><th>Size</th><th>Qty Sold</th><th>Revenue</th><th>Avg Price</th>'),
                         'channels' => print('<th>Channel</th><th>Orders</th><th>Revenue</th><th>Avg Order</th>'),
                         'payments' => print('<th>Payment Method</th><th>Orders</th><th>Revenue</th><th>Avg Order</th>'),
                         default => print('<th>No columns defined</th>')
@@ -286,8 +283,8 @@ include __DIR__ . '/../includes/sidebar_staff.php'; ?>
                     
                     <?php elseif($report_type == 'items'): ?>
                     <td><strong><?= htmlspecialchars($row['item_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($row['flavor_name']) ?></td>
-                    <td><?= htmlspecialchars($row['size_name']) ?></td>
+                    <td><?= htmlspecialchars($row['category']) ?></td>
+                    <td><?= htmlspecialchars($row['size']) ?></td>
                     <td><?= $row['qty_sold'] ?></td>
                     <td class="item-price">₱<?= number_format($row['revenue'], 2) ?></td>
                     <td>₱<?= number_format($row['avg_price'], 2) ?></td>

@@ -9,7 +9,7 @@ $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
 // Build base WHERE clause for counting and fetching
-$whereClause = "WHERE t.status = 'confirmed'";
+$whereClause = "WHERE t.status = 'completed'";
 $params = [];
 if($filter_branch) { $whereClause .= " AND t.branch_id = ?"; $params[] = $filter_branch; }
 if($filter_date)   { $whereClause .= " AND DATE(t.transaction_date) = ?"; $params[] = $filter_date; }
@@ -120,7 +120,7 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
                     <td>₱<?= number_format($t['total_amount'],2) ?></td>
                     <td><?= htmlspecialchars($t['method_name']) ?></td>
                     <td><?= htmlspecialchars($t['channel_name']) ?></td>
-                    <td><span class="status-badge <?= $t['status'] == 'confirmed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
+                    <td><span class="status-badge <?= $t['status'] == 'completed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
                     <td><?= htmlspecialchars($t['staff']) ?></td>
                     <td><?= date('M d, Y h:i A', strtotime($t['transaction_date'])) ?></td>
                 </tr>

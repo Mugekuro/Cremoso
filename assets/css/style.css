@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+ï»¿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
     /* === CREMOSO TEAL PALETTE (from logo) === */
@@ -617,17 +617,6 @@ body {
     text-align: center;
     position: relative;
     overflow: hidden;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    border-radius: 20px 20px 0 0;
 }
 
 .stat-card:hover {
@@ -1692,7 +1681,7 @@ body {
     font-size: 12px;
 }
 
-/* Edit — teal */
+/* Edit ï¿½ teal */
 .btn-edit {
     background: var(--primary-pale);
     color: var(--primary-darker);
@@ -1707,7 +1696,7 @@ body {
     box-shadow: 0 4px 12px rgba(45, 168, 155, 0.30);
 }
 
-/* Toggle status — amber */
+/* Toggle status ï¿½ amber */
 .btn-toggle {
     background: #FFF8E1;
     color: #B45309;
@@ -1722,7 +1711,7 @@ body {
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.30);
 }
 
-/* Delete — rose */
+/* Delete ï¿½ rose */
 .btn-delete {
     background: #FEF2F2;
     color: #991B1B;
@@ -1737,7 +1726,7 @@ body {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.30);
 }
 
-/* View — indigo/purple */
+/* View ï¿½ indigo/purple */
 .btn-view {
     background: #EEF2FF;
     color: #3730A3;
@@ -2009,10 +1998,8 @@ body {
 }
 
 /* Action card color variants */
-.stat-card-green { background: var(--success-pale); border-color: #6ee7b7; }
-.stat-card-green::before { background: linear-gradient(90deg, var(--success), #34d399); }
-.stat-card-amber { background: var(--warning-pale); border-color: #fcd34d; }
-.stat-card-amber::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+.stat-card-green { background: var(--success-pale); border-color: #6ee7b7; border-top: none; }
+.stat-card-amber { background: var(--warning-pale); border-color: #fcd34d; border-top: none; }
 
 @media (max-width: 600px) {
     .topnav-right { gap: 4px; }
@@ -2155,4 +2142,69 @@ body {
         font-size: 14px;
     }
 }
+}
+
+
+/* =============================
+   CONFIRMATION MODAL
+   ============================= */
+.confirm-modal {
+    max-width: 440px;
+    padding: 32px;
+}
+
+.confirm-modal-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--warning-pale);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.confirm-modal-icon i {
+    font-size: 32px;
+    color: var(--warning-dark);
+}
+
+.confirm-modal h3 {
+    font-size: 20px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.confirm-modal p {
+    color: var(--text-muted);
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 28px;
+    line-height: 1.6;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: var(--surface-2);
+    color: var(--text-body);
+    border: 1.5px solid var(--border);
+    padding: 12px 26px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.btn-cancel:hover {
+    background: var(--border);
+    transform: translateY(-2px);
 }

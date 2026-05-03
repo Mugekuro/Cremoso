@@ -133,20 +133,17 @@ $maxRevenue = max(array_column($hourlyBreakdown, 'revenue'));
 
 // === TOP ITEMS ANALYSIS ===
 $topItemsSQL = "SELECT 
-    i.item_name,
-    f.flavor_name,
-    s.size_name,
+    ti.item_name,
+    ti.category,
+    ti.size,
     SUM(ti.quantity) as qty_sold,
     COUNT(DISTINCT ti.transaction_id) as times_ordered,
     COALESCE(SUM(ti.subtotal), 0) as revenue,
-    AVG(ti.unit_price) as avg_price
+    AVG(ti.base_price) as avg_price
     FROM transaction_items ti
     JOIN transactions t ON ti.transaction_id = t.transaction_id
-    JOIN items i ON ti.item_id = i.item_id
-    JOIN flavors f ON i.flavor_id = f.flavor_id
-    JOIN item_sizes s ON i.size_id = s.size_id
     {$whereSQL}
-    GROUP BY ti.item_id
+    GROUP BY ti.item_name, ti.category, ti.size
     ORDER BY revenue DESC
     LIMIT 5";
 $stmt = $pdo->prepare($topItemsSQL);
@@ -224,8 +221,8 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
         fputcsv($output, [
             $idx + 1,
             $item['item_name'],
-            $item['flavor_name'],
-            $item['size_name'],
+            $item['category'],
+            $item['size'],
             $item['qty_sold'],
             $item['revenue']
         ]);
@@ -249,6 +246,7 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
 }
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
+<link rel="stylesheet" href="../assets/css/admin.css">
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
@@ -565,7 +563,7 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                 <tr>
                     <th>Rank</th>
                     <th>Item</th>
-                    <th>Flavor</th>
+                    <th>Category</th>
                     <th>Size</th>
                     <th>Qty Sold</th>
                     <th>Times Ordered</th>
@@ -588,8 +586,8 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                         </div>
                     </td>
                     <td><strong><?= htmlspecialchars($item['item_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($item['flavor_name']) ?></td>
-                    <td><?= htmlspecialchars($item['size_name']) ?></td>
+                    <td><?= htmlspecialchars($item['category']) ?></td>
+                    <td><?= htmlspecialchars($item['size']) ?></td>
                     <td><?= $item['qty_sold'] ?></td>
                     <td><?= $item['times_ordered'] ?></td>
                     <td class="item-price">₱<?= number_format($item['revenue'], 2) ?></td>
@@ -721,64 +719,5 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
     </div>
     <?php endif; ?>
 </div>
-
-<style>
-.filter-tag {
-    background: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    margin-right: 8px;
-    font-size: 12px;
-    border: 1px solid var(--primary);
-}
-
-/* Print styles */
-@media print {
-    .main-content {
-        margin: 0 !important;
-        padding: 20px !important;
-    }
-    
-    .page-header div:last-child,
-    .btn-secondary,
-    .sidebar,
-    .topnav {
-        display: none !important;
-    }
-    
-    .data-table {
-        break-inside: avoid;
-        margin-bottom: 20px;
-    }
-    
-    .stats-grid {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
-    }
-    
-    .stat-card {
-        border: 1px solid #ddd !important;
-        padding: 10px !important;
-    }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    .data-table table {
-        font-size: 12px;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: 8px 4px;
-    }
-}
-</style>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

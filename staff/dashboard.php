@@ -4,25 +4,27 @@ if (!isStaff()) { header('Location: ../index.php'); exit(); }
 
 $branch_id = $_SESSION['branch_id'];
 $today = date('Y-m-d');
+$today_start = $today . ' 00:00:00';
+$today_end = $today . ' 23:59:59';
 
-// Today's stats (only confirmed orders - with fallback for missing status column)
+// Today's stats (only completed orders - with fallback for missing status column)
 try {
-    $todayStats = $pdo->prepare("SELECT COUNT(*) as orders, SUM(total_amount) as revenue FROM transactions WHERE DATE(transaction_date) = ? AND branch_id = ? AND status = 'confirmed'");
-    $todayStats->execute([$today, $branch_id]);
+    $todayStats = $pdo->prepare("SELECT COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue FROM transactions WHERE transaction_date >= ? AND transaction_date <= ? AND branch_id = ? AND status = 'completed'");
+    $todayStats->execute([$today_start, $today_end, $branch_id]);
     $todayData = $todayStats->fetch();
 } catch (PDOException $e) {
-    $todayStats = $pdo->prepare("SELECT COUNT(*) as orders, SUM(total_amount) as revenue FROM transactions WHERE DATE(transaction_date) = ? AND branch_id = ?");
-    $todayStats->execute([$today, $branch_id]);
+    $todayStats = $pdo->prepare("SELECT COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue FROM transactions WHERE transaction_date >= ? AND transaction_date <= ? AND branch_id = ?");
+    $todayStats->execute([$today_start, $today_end, $branch_id]);
     $todayData = $todayStats->fetch();
 }
 
-// Recent orders (only confirmed ones - with fallback)
+// Recent orders (only completed ones - with fallback)
 try {
     $recentOrders = $pdo->prepare("SELECT t.*, c.customer_name, pm.method_name
                                    FROM transactions t
                                    JOIN customers c ON t.customer_id = c.customer_id
                                    JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-                                   WHERE t.branch_id = ? AND t.status = 'confirmed'
+                                   WHERE t.branch_id = ? AND t.status = 'completed'
                                    ORDER BY t.transaction_date DESC LIMIT 5");
     $recentOrders->execute([$branch_id]);
     $recent = $recentOrders->fetchAll();
@@ -37,9 +39,9 @@ try {
     $recent = $recentOrders->fetchAll();
 }
 
-// Total orders this month (only confirmed - with fallback)
+// Total orders this month (only completed - with fallback)
 try {
-    $monthOrders = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE MONTH(transaction_date) = MONTH(CURRENT_DATE()) AND branch_id = ? AND status = 'confirmed'");
+    $monthOrders = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE MONTH(transaction_date) = MONTH(CURRENT_DATE()) AND branch_id = ? AND status = 'completed'");
     $monthOrders->execute([$branch_id]);
     $monthlyOrders = $monthOrders->fetchColumn();
 } catch (PDOException $e) {
@@ -48,9 +50,9 @@ try {
     $monthlyOrders = $monthOrders->fetchColumn();
 }
 
-// Monthly revenue (only confirmed - with fallback)
+// Monthly revenue (only completed - with fallback)
 try {
-    $monthRevenue = $pdo->prepare("SELECT SUM(total_amount) FROM transactions WHERE MONTH(transaction_date) = MONTH(CURRENT_DATE()) AND branch_id = ? AND status = 'confirmed'");
+    $monthRevenue = $pdo->prepare("SELECT SUM(total_amount) FROM transactions WHERE MONTH(transaction_date) = MONTH(CURRENT_DATE()) AND branch_id = ? AND status = 'completed'");
     $monthRevenue->execute([$branch_id]);
     $monthlyRevenue = $monthRevenue->fetchColumn() ?: 0;
 } catch (PDOException $e) {

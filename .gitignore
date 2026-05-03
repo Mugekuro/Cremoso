@@ -1,1 +1,28 @@
 .env
+
+# Debug and test files
+debug_*.php
+test_*.php
+*_debug.php
+*_test.php
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Screenshots and images in code folders (not assets)
+/admin/*.png
+/admin/*.jpg
+/admin/*.jpeg
+/staff/*.png
+/staff/*.jpg
+/staff/*.jpeg
+/includes/*.png
+/includes/*.jpg
+/includes/*.jpeg
+
+# Temporary documentation
+*_SUMMARY.md
+*_NOTES.md
+TODO.md

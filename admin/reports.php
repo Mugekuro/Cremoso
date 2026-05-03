@@ -25,7 +25,7 @@ $date_end = $date_config['end'] ?? 'CURDATE()';
 $date_label = $date_config['label'];
 
 // Build WHERE clause
-$whereClauses = ["transaction_date >= {$date_start}", "DATE(transaction_date) <= {$date_end}", "t.status = 'confirmed'"];
+$whereClauses = ["transaction_date >= {$date_start}", "DATE(transaction_date) <= {$date_end}", "t.status = 'completed'"];
 $params = [];
 
 if($filter_branch) { $whereClauses[] = "t.branch_id = ?"; $params[] = $filter_branch; }
@@ -65,7 +65,7 @@ $prevMetricsSQL = "SELECT
     FROM transactions t 
     WHERE transaction_date < {$date_start} 
     AND transaction_date >= DATE_SUB({$date_start}, INTERVAL ({$date_config['days']}) DAY)
-    AND t.status = 'confirmed'";
+    AND t.status = 'completed'";
 $stmt = $pdo->prepare($prevMetricsSQL);
 $stmt->execute();
 $prevMetrics = $stmt->fetch();
@@ -126,20 +126,17 @@ elseif($report_type == 'monthly') {
 // === ITEM PERFORMANCE REPORT ===
 elseif($report_type == 'items') {
     $itemReport = $pdo->prepare("SELECT 
-        i.item_name,
-        f.flavor_name,
-        s.size_name,
+        ti.item_name,
+        ti.category,
+        ti.size,
         SUM(ti.quantity) as qty_sold,
         COUNT(DISTINCT ti.transaction_id) as times_ordered,
         COALESCE(SUM(ti.subtotal), 0) as revenue,
-        AVG(ti.unit_price) as avg_price
+        AVG(ti.base_price) as avg_price
         FROM transaction_items ti
         JOIN transactions t ON ti.transaction_id = t.transaction_id
-        JOIN items i ON ti.item_id = i.item_id
-        JOIN flavors f ON i.flavor_id = f.flavor_id
-        JOIN item_sizes s ON i.size_id = s.size_id
         {$whereSQL}
-        GROUP BY ti.item_id
+        GROUP BY ti.item_name, ti.category, ti.size
         ORDER BY revenue DESC");
     $itemReport->execute($params);
     $reportData = $itemReport->fetchAll();
@@ -238,12 +235,12 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
             }
         }
     } elseif($report_type == 'items') {
-        fputcsv($output, ['Item Name', 'Flavor', 'Size', 'Qty Sold', 'Revenue', 'Avg Price', 'Times Ordered']);
+        fputcsv($output, ['Item Name', 'Category', 'Size', 'Qty Sold', 'Revenue', 'Avg Price', 'Times Ordered']);
         foreach($reportData as $row) {
             fputcsv($output, [
                 $row['item_name'],
-                $row['flavor_name'],
-                $row['size_name'],
+                $row['category'],
+                $row['size'],
                 $row['qty_sold'],
                 $row['revenue'],
                 $row['avg_price'],
@@ -412,7 +409,7 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                         'daily' => print('<th>Date</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Actions</th>'),
                         'weekly' => print('<th>Week Period</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Actions</th>'),
                         'monthly' => print('<th>Month</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Unique Customers</th><th>Actions</th>'),
-                        'items' => print('<th>Item</th><th>Flavor</th><th>Size</th><th>Qty Sold</th><th>Times Ordered</th><th>Revenue</th><th>Avg Price</th>'),
+                        'items' => print('<th>Item</th><th>Category</th><th>Size</th><th>Qty Sold</th><th>Times Ordered</th><th>Revenue</th><th>Avg Price</th>'),
                         'branches' => print('<th>Branch</th><th>Location</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Customers</th><th>Active Days</th><th>Share</th>'),
                         'channels' => print('<th>Channel</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Customers</th><th>Share</th>'),
                         'payments' => print('<th>Payment Method</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Customers</th><th>Share</th>'),
@@ -463,8 +460,8 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                     
                     <?php elseif($report_type == 'items'): ?>
                     <td><strong><?= htmlspecialchars($row['item_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($row['flavor_name']) ?></td>
-                    <td><?= htmlspecialchars($row['size_name']) ?></td>
+                    <td><?= htmlspecialchars($row['category']) ?></td>
+                    <td><?= htmlspecialchars($row['size']) ?></td>
                     <td><?= $row['qty_sold'] ?></td>
                     <td><?= $row['times_ordered'] ?></td>
                     <td class="item-price">₱<?= number_format($row['revenue'], 2) ?></td>

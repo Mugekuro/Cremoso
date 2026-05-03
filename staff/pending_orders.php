@@ -40,6 +40,7 @@ include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
 ?>
+<link rel="stylesheet" href="../assets/css/staff.css">
 
 <div class="main-content">
     <div class="page-header">
@@ -183,108 +184,6 @@ include __DIR__ . '/../includes/sidebar_staff.php';
     <?php endif; ?>
 </div>
 
-<style>
-.btn-success {
-    background: var(--success);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.btn-success:hover {
-    background: var(--success-dark);
-    transform: translateY(-1px);
-    color: white;
-}
-
-.btn-danger {
-    background: var(--error);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.btn-danger:hover {
-    background: var(--error-dark);
-    transform: translateY(-1px);
-    color: white;
-}
-
-.btn-secondary {
-    background: #f0f0f0;
-    color: var(--text-dark);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.btn-secondary:hover {
-    background: #e0e0e0;
-    color: var(--text-dark);
-}
-
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-}
-.modal-overlay.active { 
-    display: flex !important; 
-    visibility: visible !important;
-}
-.modal-box {
-    background: #fff;
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 420px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    text-align: center;
-    position: relative;
-    z-index: 10000;
-}
-.modal-icon { font-size: 48px; margin-bottom: 16px; }
-.modal-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
-.modal-body { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
-.modal-order-info {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: var(--text-body);
-    text-align: left;
-}
-.modal-actions { display: flex; gap: 12px; justify-content: center; }
-.modal-actions button { min-width: 110px; }
-</style>
 
 <!-- Confirmation Modal -->
 <div class="modal-overlay" id="actionModal">

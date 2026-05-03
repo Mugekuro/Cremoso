@@ -16,6 +16,7 @@ include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
 ?>
+<link rel="stylesheet" href="../assets/css/staff.css">
 
 <div class="main-content">
     <div class="page-header">
@@ -227,45 +228,6 @@ include __DIR__ . '/../includes/sidebar_staff.php';
     </div>
 </div>
 
-<style>
-.order-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
-.order-panel { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-
-.category-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-.tab-btn { background: none; border: none; padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-.tab-btn:hover { color: var(--primary); }
-.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-.item-card { background: var(--primary-pale); border: 2px solid transparent; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
-.item-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(45,168,155,0.2); }
-.item-name { font-weight: 600; font-size: 14px; color: var(--text-dark); margin-bottom: 8px; }
-.item-prices { font-size: 13px; color: var(--primary); font-weight: 700; }
-
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; }
-.modal-overlay.active { display: flex !important; }
-.modal-box { background: #fff; border-radius: 16px; padding: 32px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-.modal-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; }
-.modal-body { margin-bottom: 24px; }
-.modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
-
-.size-options { display: flex; flex-direction: column; gap: 12px; }
-.size-option { background: var(--primary-pale); border: 2px solid transparent; border-radius: 12px; padding: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
-.size-option:hover, .size-option.selected { border-color: var(--primary); background: #fff; }
-.size-option.selected { box-shadow: 0 0 0 3px rgba(45,168,155,0.2); }
-
-.customization-section { margin-bottom: 24px; }
-.customization-section h5 { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 12px; }
-.customization-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
-.custom-checkbox { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
-.custom-checkbox:hover { background: var(--primary-pale); }
-.custom-checkbox input { cursor: pointer; }
-.custom-checkbox span { font-size: 13px; }
-
-@media (max-width: 1024px) {
-    .order-layout { grid-template-columns: 1fr; }
-}
-</style>
 
 <script>
 let cart = [];

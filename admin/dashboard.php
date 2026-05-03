@@ -3,14 +3,14 @@ require_once __DIR__ . '/../includes/auth.php';
 redirectIfNotAdmin();
 
 // === KPI METRICS ===
-$todaySales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE DATE(transaction_date) = CURDATE() AND status = 'confirmed'")->fetchColumn();
-$todayOrders = $pdo->query("SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) = CURDATE() AND status = 'confirmed'")->fetchColumn();
+$todaySales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE DATE(transaction_date) = CURDATE() AND status = 'completed'")->fetchColumn();
+$todayOrders = $pdo->query("SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) = CURDATE() AND status = 'completed'")->fetchColumn();
 
-$yesterdaySales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE DATE(transaction_date) = CURDATE() - INTERVAL 1 DAY AND status = 'confirmed'")->fetchColumn();
-$yesterdayOrders = $pdo->query("SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) = CURDATE() - INTERVAL 1 DAY AND status = 'confirmed'")->fetchColumn();
+$yesterdaySales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE DATE(transaction_date) = CURDATE() - INTERVAL 1 DAY AND status = 'completed'")->fetchColumn();
+$yesterdayOrders = $pdo->query("SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) = CURDATE() - INTERVAL 1 DAY AND status = 'completed'")->fetchColumn();
 
-$weekSales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND status = 'confirmed'")->fetchColumn();
-$monthSales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE MONTH(transaction_date) = MONTH(CURDATE()) AND YEAR(transaction_date) = YEAR(CURDATE()) AND status = 'confirmed'")->fetchColumn();
+$weekSales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND status = 'completed'")->fetchColumn();
+$monthSales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions WHERE MONTH(transaction_date) = MONTH(CURDATE()) AND YEAR(transaction_date) = YEAR(CURDATE()) AND status = 'completed'")->fetchColumn();
 
 $salesGrowth = $yesterdaySales > 0 ? (($todaySales - $yesterdaySales) / $yesterdaySales) * 100 : 0;
 $ordersGrowth = $yesterdayOrders > 0 ? (($todayOrders - $yesterdayOrders) / $yesterdayOrders) * 100 : 0;
@@ -34,7 +34,7 @@ $countSql = "SELECT COUNT(*) FROM transactions t
              JOIN users u ON t.user_id = u.user_id
              JOIN branches b ON t.branch_id = b.branch_id
              JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-             {$whereClause} AND t.status = 'confirmed'";
+             {$whereClause} AND t.status = 'completed'";
 $countStmt = $pdo->prepare($countSql);
 $countStmt->execute($params);
 $totalTxnRecords = $countStmt->fetchColumn();
@@ -46,7 +46,7 @@ $sql = "SELECT t.*, c.customer_name, u.fullname as staff, b.branch_name, pm.meth
         JOIN users u ON t.user_id = u.user_id
         JOIN branches b ON t.branch_id = b.branch_id
         JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-        {$whereClause} AND t.status = 'confirmed'
+        {$whereClause} AND t.status = 'completed'
         ORDER BY t.transaction_date DESC
         LIMIT :limit OFFSET :offset";
 $stmt = $pdo->prepare($sql);
@@ -62,7 +62,7 @@ $recentTxns = $stmt->fetchAll();
 $bestSeller = $pdo->query("SELECT ti.item_name, SUM(ti.quantity) as qty
                            FROM transaction_items ti
                            JOIN transactions t ON ti.transaction_id = t.transaction_id
-                           WHERE MONTH(t.transaction_date) = MONTH(CURDATE()) AND YEAR(t.transaction_date) = YEAR(CURDATE()) AND t.status = 'confirmed'
+                           WHERE MONTH(t.transaction_date) = MONTH(CURDATE()) AND YEAR(t.transaction_date) = YEAR(CURDATE()) AND t.status = 'completed'
                            GROUP BY ti.item_name
                            ORDER BY qty DESC LIMIT 1")->fetch();
 
@@ -73,7 +73,7 @@ $topBranch = $pdo->query("SELECT b.branch_name, COALESCE(SUM(t.total_amount),0) 
                            LEFT JOIN transactions t ON b.branch_id = t.branch_id
                                AND MONTH(t.transaction_date) = MONTH(CURDATE())
                                AND YEAR(t.transaction_date) = YEAR(CURDATE())
-                               AND t.status = 'confirmed'
+                               AND t.status = 'completed'
                            GROUP BY b.branch_id
                            ORDER BY revenue DESC LIMIT 1")->fetch();
 
@@ -83,7 +83,7 @@ $topBranchShare = ($topBranch && $totalMonthRevenue > 0) ? ($topBranch['revenue'
 // === REVENUE TREND (last 7 days) ===
 $weeklyTrend = $pdo->query("SELECT DATE(transaction_date) as day, SUM(total_amount) as total, COUNT(*) as orders
                             FROM transactions
-                            WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status = 'confirmed'
+                            WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status = 'completed'
                             GROUP BY DATE(transaction_date)
                             ORDER BY day")->fetchAll();
 
@@ -181,7 +181,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                     <td><?= htmlspecialchars($t['branch_name']) ?></td>
                     <td class="item-price">₱<?= number_format($t['total_amount'], 2) ?></td>
                     <td><span class="status-badge status-active"><?= htmlspecialchars($t['method_name']) ?></span></td>
-                    <td><span class="status-badge <?= $t['status'] == 'confirmed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
+                    <td><span class="status-badge <?= $t['status'] == 'completed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
                     <td style="font-size: 12px; color: var(--text-muted);"><?= date('M d, h:i A', strtotime($t['transaction_date'])) ?></td>
                 </tr>
                 <?php endforeach; ?>

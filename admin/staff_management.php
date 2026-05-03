@@ -61,6 +61,7 @@ $confirmedStmt->execute();
 $confirmedStaff = $confirmedStmt->fetchAll();
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
+<link rel="stylesheet" href="../assets/css/admin.css">
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
@@ -208,10 +209,10 @@ $confirmedStaff = $confirmedStmt->fetchAll();
                         <?= date('M j, Y g:i A', strtotime($staff['created_at'])) ?>
                     </td>
                     <td style="text-align: center;">
-                        <form method="POST" style="display: inline-block;">
+                        <form method="POST" style="display: inline-block;" id="revokeForm<?= $staff['user_id'] ?>">
                             <input type="hidden" name="user_id" value="<?= $staff['user_id'] ?>">
-                            <button type="submit" name="revoke_staff" class="btn-warning" 
-                                    onclick="return confirm('Revoke access for this staff member? They will not be able to log in until re-approved.')"
+                            <button type="button" class="btn-warning" 
+                                    onclick="showRevokeModal(<?= $staff['user_id'] ?>)"
                                     style="padding: 8px 16px; font-size: 13px;">
                                 <i class="fas fa-ban"></i> Revoke Access
                             </button>
@@ -230,85 +231,9 @@ $confirmedStaff = $confirmedStmt->fetchAll();
     </div>
 </div>
 
-<style>
-.badge-warning {
-    background: var(--warning);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
 
-.badge-success {
-    background: var(--success);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
 
-.badge-info {
-    background: var(--primary-pale);
-    color: var(--primary-dark);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.btn-success {
-    background: var(--success);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s;
-}
-
-.btn-success:hover {
-    background: #27ae60;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s;
-}
-
-.btn-danger:hover {
-    background: #c0392b;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-}
-
-.btn-warning {
-    background: var(--warning);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s;
-}
-
-.btn-warning:hover {
-    background: #d68910;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
-}
-</style>
+<?php include __DIR__ . '/../includes/revoke_modal.php'; ?>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 

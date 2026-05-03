@@ -11,7 +11,7 @@ $stmt = $pdo->prepare("SELECT t.*, c.customer_name, u.fullname as staff, oc.chan
                        JOIN users u ON t.user_id = u.user_id
                        JOIN order_channels oc ON t.channel_id = oc.channel_id
                        JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-                       WHERE DATE(t.transaction_date) = ? AND t.branch_id = ? AND t.status = 'confirmed'
+                       WHERE DATE(t.transaction_date) = ? AND t.branch_id = ? AND t.status = 'completed'
                        ORDER BY t.transaction_date DESC");
 $stmt->execute([$today, $branch_id]);
 $transactions = $stmt->fetchAll();

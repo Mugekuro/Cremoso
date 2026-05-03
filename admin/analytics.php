@@ -43,7 +43,7 @@ $prev_end = match($date_range) {
     default => 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)'
 };
 
-$prevFilter = "WHERE transaction_date >= {$prev_start} AND transaction_date < {$prev_end} AND status = 'confirmed'";
+$prevFilter = "WHERE transaction_date >= {$prev_start} AND transaction_date < {$prev_end} AND status = 'completed'";
 $prevRevenue = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions {$prevFilter}")->fetchColumn();
 $prevOrders = $pdo->query("SELECT COUNT(*) FROM transactions {$prevFilter}")->fetchColumn();
 
@@ -140,6 +140,7 @@ $dailyAvg = $num_days > 0 ? $totalRevenue / $num_days : 0;
 $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
+<link rel="stylesheet" href="../assets/css/admin.css">
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
@@ -561,39 +562,5 @@ if (hourLabels.length > 0) {
     });
 }
 </script>
-
-<style>
-/* Analytics page specific responsive adjustments */
-.analytics-charts-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.analytics-charts-row .chart-card {
-    padding: 14px 14px;
-    min-height: 0;
-}
-
-.analytics-charts-row .chart-card h3 {
-    font-size: 12px;
-    margin-bottom: 8px;
-}
-
-.analytics-charts-row .chart-card canvas {
-    max-height: 160px;
-}
-
-@media (max-width: 1024px) {
-    .analytics-charts-row {
-        grid-template-columns: 1fr !important;
-    }
-    
-    .analytics-charts-row .chart-card canvas {
-        max-height: 200px;
-    }
-}
-</style>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

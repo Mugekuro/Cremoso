@@ -73,12 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Cremoso - Staff Sign Up</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="/Cremoso/assets/css/style.css?v=5">
+    <link rel="stylesheet" href="/Cremoso/assets/css/auth.css?v=5">
 </head>
 <body>
 <div class="login-container">
     <div class="login-card">
-        <img src="../assets/images/logo.jpg" alt="Cremoso" class="login-logo">
+        <img src="/Cremoso/assets/images/logo.jpg" alt="Cremoso" class="login-logo">
         <h2>Staff Sign Up</h2>
         <p class="subtitle">Create your Cremoso staff account</p>
 
@@ -156,18 +157,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </p>
     </div>
 </div>
-<style>
-.branch-select {
-    width: 100%; padding: 14px 18px;
-    border: 1.5px solid var(--border); border-radius: 14px;
-    font-size: 15px; font-family: inherit;
-    background: var(--surface); color: var(--text-dark);
-    transition: all 0.25s;
-}
-.branch-select:focus {
-    outline: none; border-color: var(--primary);
-    background: var(--white); box-shadow: 0 0 0 4px rgba(45,168,155,0.15);
-}
-</style>
 </body>
 </html>

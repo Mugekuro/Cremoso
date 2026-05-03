@@ -216,6 +216,9 @@ $fruits = $pdo->query("SELECT * FROM fruits ORDER BY fruit_name")->fetchAll();
 $extras = $pdo->query("SELECT * FROM extras ORDER BY extra_name")->fetchAll();
 
 include __DIR__ . '/../includes/header.php';
+?>
+<link rel="stylesheet" href="../assets/css/admin.css">
+<?php
 include __DIR__ . '/../includes/sidebar_admin.php';
 include __DIR__ . '/../includes/topnav_admin.php';
 ?>
@@ -619,24 +622,6 @@ include __DIR__ . '/../includes/topnav_admin.php';
 </div>
 
 
-
-<style>
-.management-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
-.management-tabs .tab-btn { background: none; border: none; padding: 12px 24px; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-.management-tabs .tab-btn:hover { color: var(--primary); }
-.management-tabs .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
-.modal-overlay.active { display: flex !important; }
-.modal-box { background: #fff; border-radius: 16px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-.modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
-.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
-.badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-.badge-success { background: #d4edda; color: #155724; }
-.badge-secondary { background: #e2e3e5; color: #383d41; }
-.badge-info { background: #d1ecf1; color: #0c5460; }
-</style>
 
 <script>
 // Tab switching

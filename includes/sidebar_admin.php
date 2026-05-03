@@ -3,7 +3,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <div class="sidebar">
     <div class="sidebar-logo">
-        <img src="../assets/images/logo.jpg" alt="Cremoso">
+        <img src="/Cremoso/assets/images/logo.jpg" alt="Cremoso">
         <h3>Cremoso Admin</h3>
         <p>Sales & Transaction System</p>
     </div>
