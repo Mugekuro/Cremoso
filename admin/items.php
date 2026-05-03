@@ -90,13 +90,13 @@ $totalPages = ceil($totalRecords / $perPage);
 $sql = "SELECT * FROM items
         {$whereClause}
         ORDER BY display_order ASC, item_id DESC
-        LIMIT :limit OFFSET :offset";
+        LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
 foreach ($params as $i => $param) {
     $stmt->bindValue($i + 1, $param);
 }
-$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->bindValue(count($params) + 1, $perPage, PDO::PARAM_INT);
+$stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $items = $stmt->fetchAll();
 
@@ -122,28 +122,37 @@ $categories = $pdo->query("SELECT DISTINCT category FROM items ORDER BY category
     <!-- Filter Form -->
     <div class="filter-card">
         <form method="GET" class="filter-form">
-            <div class="filter-group">
-                <label><i class="fas fa-search"></i> Search</label>
-                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by name, variant, or base item...">
+            <div class="filter-group search-group">
+                <label>Search</label>
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by name, variant, or base item...">
+                </div>
             </div>
             <div class="filter-group">
                 <label><i class="fas fa-layer-group"></i> Category</label>
-                <select name="category">
-                    <option value="">All Categories</option>
-                    <?php foreach ($categories as $cat): ?>
-                    <option value="<?= htmlspecialchars($cat) ?>" <?= $filter_category == $cat ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($cat) ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="select-wrapper">
+                    <i class="fas fa-layer-group select-icon"></i>
+                    <select name="category">
+                        <option value="">All Categories</option>
+                        <?php foreach ($categories as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat) ?>" <?= $filter_category == $cat ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
             <div class="filter-group">
                 <label><i class="fas fa-toggle-on"></i> Status</label>
-                <select name="status">
-                    <option value="">All Status</option>
-                    <option value="1" <?= $filter_status === '1' ? 'selected' : '' ?>>Active</option>
-                    <option value="0" <?= $filter_status === '0' ? 'selected' : '' ?>>Inactive</option>
-                </select>
+                <div class="select-wrapper">
+                    <i class="fas fa-toggle-on select-icon"></i>
+                    <select name="status">
+                        <option value="">All Status</option>
+                        <option value="1" <?= $filter_status === '1' ? 'selected' : '' ?>>Active</option>
+                        <option value="0" <?= $filter_status === '0' ? 'selected' : '' ?>>Inactive</option>
+                    </select>
+                </div>
             </div>
             <div class="filter-actions">
                 <button type="submit" class="btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>

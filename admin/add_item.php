@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $size = trim($_POST['size'] ?? '');
     $price = (float)($_POST['price'] ?? 0);
     $description = trim($_POST['description'] ?? '') ?: null;
-    $display_order = (int)($_POST['display_order'] ?? 0);
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     
     // Store form data for repopulation on error
@@ -27,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'size' => $size,
         'price' => $price,
         'description' => $description,
-        'display_order' => $display_order,
         'is_active' => $is_active
     ];
     
@@ -37,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message_type = 'error';
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO items (item_name, category, base_item, variant, size, price, description, display_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            if ($stmt->execute([$item_name, $category, $base_item, $variant, $size, $price, $description, $display_order, $is_active])) {
+            $stmt = $pdo->prepare("INSERT INTO items (item_name, category, base_item, variant, size, price, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($stmt->execute([$item_name, $category, $base_item, $variant, $size, $price, $description, $is_active])) {
                 $_SESSION['success_message'] = 'Item added successfully!';
                 header('Location: items.php');
                 exit;
@@ -61,10 +59,6 @@ $base_items = $pdo->query("SELECT DISTINCT base_item FROM items ORDER BY base_it
 
 // Get existing sizes for suggestions
 $sizes = $pdo->query("SELECT DISTINCT size FROM items ORDER BY size")->fetchAll(PDO::FETCH_COLUMN);
-
-// Get max display order
-$max_order = $pdo->query("SELECT MAX(display_order) FROM items")->fetchColumn();
-$next_order = ($max_order ?? 0) + 1;
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
@@ -169,21 +163,15 @@ $next_order = ($max_order ?? 0) + 1;
                         <small class="form-hint">Price in Philippine Peso</small>
                     </div>
 
-                    <div class="form-group">
-                        <label for="display_order">Display Order</label>
-                        <input type="number" id="display_order" name="display_order" min="0" 
-                               value="<?= htmlspecialchars($form_data['display_order'] ?? $next_order) ?>" 
-                               placeholder="<?= $next_order ?>">
-                        <small class="form-hint">Order in menu (default: <?= $next_order ?>)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="is_active" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <div class="form-group checkbox-group">
+                        <label for="is_active">Active (visible in menu)</label>
+                        <div class="checkbox-wrapper">
                             <input type="checkbox" id="is_active" name="is_active" 
-                                   <?= ($form_data['is_active'] ?? 1) ? 'checked' : '' ?> 
-                                   style="width: auto; cursor: pointer;">
-                            <span>Active (visible in menu)</span>
-                        </label>
+                                   <?= ($form_data['is_active'] ?? 1) ? 'checked' : '' ?>>
+                            <label for="is_active" class="checkbox-label">
+                                <span class="checkbox-text">Active</span>
+                            </label>
+                        </div>
                         <small class="form-hint">Uncheck to hide from menu</small>
                     </div>
                 </div>
@@ -279,10 +267,42 @@ $next_order = ($max_order ?? 0) + 1;
     box-shadow: 0 0 0 3px var(--primary-muted);
 }
 
-.form-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.checkbox-wrapper:hover {
+    border-color: var(--primary);
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
     cursor: pointer;
+    margin: 0;
+}
+
+.checkbox-wrapper .checkbox-label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.checkbox-text {
+    color: var(--text-dark);
+    font-size: 14px;
 }
 
 .form-hint {
