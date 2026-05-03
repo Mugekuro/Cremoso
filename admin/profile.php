@@ -67,15 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-user-circle"></i> My Profile</h1>
-        <div class="user-info">
-            <i class="fas fa-calendar-day"></i>
-            <span><?= date('l, F j, Y') ?></span>
-            <span class="branch-badge">Admin</span>
-        </div>
     </div>
 
     <?php if ($error): ?>

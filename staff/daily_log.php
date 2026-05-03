@@ -20,16 +20,13 @@ $transactions = $stmt->fetchAll();
 $dailyTotal = array_sum(array_column($transactions, 'total_amount'));
 
 include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
 ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-calendar-day"></i> Daily Transaction Log</h1>
-        <div class="user-info">
-            <i class="fas fa-calendar"></i>
-            <span><?= date('F d, Y') ?></span>
-        </div>
     </div>
 
     <?php if(isset($_GET['msg'])): ?>

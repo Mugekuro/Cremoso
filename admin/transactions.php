@@ -9,7 +9,7 @@ $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
 // Build base WHERE clause for counting and fetching
-$whereClause = "WHERE 1=1";
+$whereClause = "WHERE t.status = 'confirmed'";
 $params = [];
 if($filter_branch) { $whereClause .= " AND t.branch_id = ?"; $params[] = $filter_branch; }
 if($filter_date)   { $whereClause .= " AND DATE(t.transaction_date) = ?"; $params[] = $filter_date; }
@@ -47,15 +47,11 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-list"></i> All Transactions</h1>
-        <div class="user-info">
-            <i class="fas fa-user-circle"></i>
-            <span><?= htmlspecialchars($_SESSION['fullname']) ?></span>
-            <span class="branch-badge">Admin</span>
-        </div>
     </div>
 
     <!-- Filter Form -->
@@ -110,6 +106,7 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
                     <th>Total</th>
                     <th>Payment</th>
                     <th>Channel</th>
+                    <th>Status</th>
                     <th>Staff</th>
                     <th>Date</th>
                 </tr>
@@ -123,12 +120,13 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
                     <td>₱<?= number_format($t['total_amount'],2) ?></td>
                     <td><?= htmlspecialchars($t['method_name']) ?></td>
                     <td><?= htmlspecialchars($t['channel_name']) ?></td>
+                    <td><span class="status-badge <?= $t['status'] == 'confirmed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
                     <td><?= htmlspecialchars($t['staff']) ?></td>
                     <td><?= date('M d, Y h:i A', strtotime($t['transaction_date'])) ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if(count($transactions) == 0): ?>
-                <tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
                     No transactions found
                 </td></tr>

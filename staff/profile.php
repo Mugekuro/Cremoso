@@ -11,16 +11,12 @@ $branch->execute([$_SESSION['branch_id']]);
 $branchName = $branch->fetchColumn();
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
-<?php include __DIR__ . '/../includes/sidebar_staff.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_staff.php';
+include __DIR__ . '/../includes/sidebar_staff.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-user-circle"></i> My Profile</h1>
-        <div class="user-info">
-            <i class="fas fa-store"></i>
-            <span><?= htmlspecialchars($branchName) ?></span>
-            <span class="branch-badge">Staff</span>
-        </div>
     </div>
 
     <div class="profile-card">

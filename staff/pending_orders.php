@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/menu_helpers.php';
 if (!isStaff()) { header('Location: ../index.php'); exit(); }
 
 $branch_id = $_SESSION['branch_id'];
@@ -10,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $action = $_POST['action'];
     
     if ($action === 'confirm') {
-        $stmt = $pdo->prepare("UPDATE transactions SET status = 'confirmed' WHERE transaction_id = ? AND branch_id = ?");
+        $stmt = $pdo->prepare("UPDATE transactions SET status = 'completed' WHERE transaction_id = ? AND branch_id = ?");
         $stmt->execute([$transaction_id, $branch_id]);
         $message = "Order confirmed successfully!";
     } elseif ($action === 'cancel') {
@@ -36,16 +37,13 @@ $pendingOrders->execute([$branch_id]);
 $pending = $pendingOrders->fetchAll();
 
 include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
 ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-clock"></i> Pending Orders</h1>
-        <div class="user-info">
-            <i class="fas fa-user-circle"></i>
-            <span><?= htmlspecialchars($_SESSION['fullname']) ?></span>
-        </div>
     </div>
 
     <?php if(isset($_GET['msg'])): ?>
@@ -83,13 +81,8 @@ include __DIR__ . '/../includes/sidebar_staff.php';
             <tbody>
                 <?php foreach($pending as $order): ?>
                 <?php
-                // Get order items
-                $items = $pdo->prepare("SELECT ti.*, i.item_name, f.flavor_name, s.size_name
-                                       FROM transaction_items ti
-                                       JOIN items i ON ti.item_id = i.item_id
-                                       JOIN flavors f ON i.flavor_id = f.flavor_id
-                                       JOIN item_sizes s ON i.size_id = s.size_id
-                                       WHERE ti.transaction_id = ?");
+                // Get order items from new schema
+                $items = $pdo->prepare("SELECT ti.* FROM transaction_items ti WHERE ti.transaction_id = ?");
                 $items->execute([$order['transaction_id']]);
                 $orderItems = $items->fetchAll();
                 ?>
@@ -111,25 +104,48 @@ include __DIR__ . '/../includes/sidebar_staff.php';
                     <td>
                         <div style="font-size: 13px;">
                             <?php foreach($orderItems as $item): ?>
-                            <div>• <?= htmlspecialchars($item['item_name']) ?> - <?= htmlspecialchars($item['flavor_name']) ?> (<?= htmlspecialchars($item['size_name']) ?>) x<?= $item['quantity'] ?></div>
+                            <?php
+                            $displayName = $item['item_name'];
+                            $customizations = getTransactionItemCustomizations($item['transaction_item_id']);
+                            ?>
+                            <div style="margin-bottom: 8px;">
+                                <strong>• <?= htmlspecialchars($displayName) ?> x<?= $item['quantity'] ?></strong>
+                                <?php 
+                                $hasCustomizations = false;
+                                foreach($customizations as $type => $items) {
+                                    if (!empty($items)) {
+                                        $hasCustomizations = true;
+                                        break;
+                                    }
+                                }
+                                if ($hasCustomizations): ?>
+                                <div style="margin-left: 16px; font-size: 12px; color: var(--text-muted);">
+                                    <?php foreach($customizations as $type => $customs): ?>
+                                        <?php if (!empty($customs)): ?>
+                                        <div>+ <?= ucfirst($type) ?>: <?= implode(', ', array_column($customs, substr($type, 0, -1) . '_name')) ?></div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+                            </div>
                             <?php endforeach; ?>
                         </div>
                     </td>
                     <td>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <form method="POST" style="display: inline;">
+                            <form method="POST" id="form-confirm-<?= $order['transaction_id'] ?>">
                                 <input type="hidden" name="transaction_id" value="<?= $order['transaction_id'] ?>">
                                 <input type="hidden" name="action" value="confirm">
-                                <button type="submit" class="btn-success" style="font-size: 12px; padding: 6px 12px;" 
-                                        onclick="return confirm('Confirm this order? Customer has completed payment?')">
+                                <button type="button" class="btn-success" style="font-size: 12px; padding: 6px 12px;"
+                                        onclick="openModal('confirm', <?= $order['transaction_id'] ?>, '<?= addslashes($order['order_number']) ?>', '<?= addslashes(htmlspecialchars($order['customer_name'])) ?>')">
                                     <i class="fas fa-check"></i> Confirm
                                 </button>
                             </form>
-                            <form method="POST" style="display: inline;">
+                            <form method="POST" id="form-cancel-<?= $order['transaction_id'] ?>">
                                 <input type="hidden" name="transaction_id" value="<?= $order['transaction_id'] ?>">
                                 <input type="hidden" name="action" value="cancel">
-                                <button type="submit" class="btn-danger" style="font-size: 12px; padding: 6px 12px;"
-                                        onclick="return confirm('Cancel this order? This action cannot be undone.')">
+                                <button type="button" class="btn-danger" style="font-size: 12px; padding: 6px 12px;"
+                                        onclick="openModal('cancel', <?= $order['transaction_id'] ?>, '<?= addslashes($order['order_number']) ?>', '<?= addslashes(htmlspecialchars($order['customer_name'])) ?>')">
                                     <i class="fas fa-times"></i> Cancel
                                 </button>
                             </form>
@@ -180,11 +196,13 @@ include __DIR__ . '/../includes/sidebar_staff.php';
     align-items: center;
     gap: 6px;
     transition: all 0.2s ease;
+    text-decoration: none;
 }
 
 .btn-success:hover {
     background: var(--success-dark);
     transform: translateY(-1px);
+    color: white;
 }
 
 .btn-danger {
@@ -199,12 +217,182 @@ include __DIR__ . '/../includes/sidebar_staff.php';
     align-items: center;
     gap: 6px;
     transition: all 0.2s ease;
+    text-decoration: none;
 }
 
 .btn-danger:hover {
     background: var(--error-dark);
     transform: translateY(-1px);
+    color: white;
 }
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: var(--text-dark);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+    color: var(--text-dark);
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay.active { 
+    display: flex !important; 
+    visibility: visible !important;
+}
+.modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    text-align: center;
+    position: relative;
+    z-index: 10000;
+}
+.modal-icon { font-size: 48px; margin-bottom: 16px; }
+.modal-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+.modal-body { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+.modal-order-info {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-body);
+    text-align: left;
+}
+.modal-actions { display: flex; gap: 12px; justify-content: center; }
+.modal-actions button { min-width: 110px; }
 </style>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="actionModal">
+    <div class="modal-box">
+        <div class="modal-icon" id="modalIcon"></div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-order-info" id="modalOrderInfo"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </button>
+            <button type="button" id="modalConfirmBtn" style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; color: white; display: inline-flex; align-items: center; gap: 6px;">
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let pendingFormId = null;
+
+function openModal(type, id, orderNum, customerName) {
+    console.log('openModal called:', type, id, orderNum, customerName);
+    
+    const modal = document.getElementById('actionModal');
+    const icon = document.getElementById('modalIcon');
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const info = document.getElementById('modalOrderInfo');
+    const btn = document.getElementById('modalConfirmBtn');
+
+    console.log('Modal elements found:', {
+        modal: !!modal,
+        icon: !!icon,
+        title: !!title,
+        body: !!body,
+        info: !!info,
+        btn: !!btn
+    });
+
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+
+    info.innerHTML = '<strong>Order:</strong> ' + orderNum + '<br><strong>Customer:</strong> ' + customerName;
+
+    if (type === 'confirm') {
+        pendingFormId = 'form-confirm-' + id;
+        icon.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i>';
+        title.textContent = 'Confirm Payment';
+        body.textContent = 'Has the customer completed their payment? Confirming will mark this order as completed.';
+        btn.style.background = 'var(--success)';
+        btn.innerHTML = '<i class="fas fa-check"></i> Yes, Confirm';
+    } else {
+        pendingFormId = 'form-cancel-' + id;
+        icon.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error);"></i>';
+        title.textContent = 'Cancel Order';
+        body.textContent = 'Are you sure you want to cancel this order? The order will be removed and this action cannot be undone.';
+        btn.style.background = 'var(--error)';
+        btn.innerHTML = '<i class="fas fa-times"></i> Yes, Cancel Order';
+    }
+
+    btn.onclick = submitModal;
+    console.log('Adding active class to modal');
+    modal.classList.add('active');
+    console.log('Modal classes after adding active:', modal.className);
+}
+
+function closeModal() {
+    document.getElementById('actionModal').classList.remove('active');
+    pendingFormId = null;
+}
+
+function submitModal() {
+    if (pendingFormId) {
+        const form = document.getElementById(pendingFormId);
+        if (form) {
+            form.submit();
+        } else {
+            console.error('Form not found:', pendingFormId);
+        }
+    }
+    closeModal();
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up modal event listeners');
+    
+    const modal = document.getElementById('actionModal');
+    if (modal) {
+        console.log('Modal found, adding click listener');
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    } else {
+        console.error('Modal not found during DOM ready!');
+    }
+});
+
+// Handle escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        console.log('Escape key pressed, closing modal');
+        closeModal();
+    }
+});
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

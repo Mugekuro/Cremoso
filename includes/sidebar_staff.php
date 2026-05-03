@@ -1,18 +1,12 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Get pending orders count for notification badge (with fallback)
 $pendingCount = 0;
-if (isset($_SESSION['branch_id'])) {
-    try {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE branch_id = ? AND status = 'pending'");
-        $stmt->execute([$_SESSION['branch_id']]);
-        $pendingCount = $stmt->fetchColumn();
-    } catch (PDOException $e) {
-        // If status column doesn't exist yet, show 0
-        $pendingCount = 0;
-    }
-}
+try {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE branch_id = ? AND status = 'pending'");
+    $stmt->execute([$_SESSION['branch_id']]);
+    $pendingCount = $stmt->fetchColumn();
+} catch (PDOException $e) {}
 ?>
 <div class="sidebar">
     <div class="sidebar-logo">
@@ -24,14 +18,11 @@ if (isset($_SESSION['branch_id'])) {
         <a href="dashboard.php" class="<?= $current_page == 'dashboard.php' ? 'active' : '' ?>">
             <i class="fas fa-home"></i> <span>Dashboard</span>
         </a>
-        <a href="profile.php" class="<?= $current_page == 'profile.php' ? 'active' : '' ?>">
-            <i class="fas fa-user"></i> <span>Profile</span>
-        </a>
         <a href="new_order.php" class="<?= $current_page == 'new_order.php' ? 'active' : '' ?>">
             <i class="fas fa-cart-plus"></i> <span>New Order</span>
         </a>
         <a href="pending_orders.php" class="<?= $current_page == 'pending_orders.php' ? 'active' : '' ?>">
-            <i class="fas fa-clock"></i> 
+            <i class="fas fa-clock"></i>
             <span>Pending Orders</span>
             <?php if($pendingCount > 0): ?>
             <span class="notification-badge"><?= $pendingCount ?></span>
@@ -42,10 +33,6 @@ if (isset($_SESSION['branch_id'])) {
         </a>
         <a href="reports.php" class="<?= $current_page == 'reports.php' ? 'active' : '' ?>">
             <i class="fas fa-file-alt"></i> <span>Reports</span>
-        </a>
-        <hr style="margin: 16px 24px; border-color: rgba(255,255,255,0.1);">
-        <a href="../logout.php">
-            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
         </a>
     </div>
 </div>

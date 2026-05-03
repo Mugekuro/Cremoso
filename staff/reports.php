@@ -44,7 +44,6 @@ $metricsSQL = "SELECT
     COUNT(*) as total_orders,
     COALESCE(SUM(total_amount), 0) as total_revenue,
     AVG(total_amount) as avg_order_value,
-    COUNT(DISTINCT customer_id) as unique_customers,
     COUNT(DISTINCT DATE(transaction_date)) as active_days
     FROM transactions t {$whereSQL}";
 $stmt = $pdo->prepare($metricsSQL);
@@ -54,7 +53,6 @@ $metrics = $stmt->fetch();
 $totalOrders = $metrics['total_orders'];
 $totalRevenue = $metrics['total_revenue'];
 $avgOrderValue = $metrics['avg_order_value'];
-$uniqueCustomers = $metrics['unique_customers'];
 $activeDays = $metrics['active_days'];
 $dailyAvg = $activeDays > 0 ? $totalRevenue / $activeDays : 0;
 
@@ -156,19 +154,12 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
 }
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
-<?php include __DIR__ . '/../includes/sidebar_staff.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_staff.php';
+include __DIR__ . '/../includes/sidebar_staff.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-file-alt"></i> Reports</h1>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <a href="?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>" class="btn-secondary" style="padding: 8px 16px; font-size: 13px;">
-                <i class="fas fa-download"></i> Export CSV
-            </a>
-            <span style="font-size: 13px; color: var(--text-muted); background: var(--primary-pale); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);">
-                <i class="fas fa-store"></i> <?= htmlspecialchars($branchName) ?>
-            </span>
-        </div>
     </div>
 
     <!-- Filter Card -->
@@ -243,25 +234,27 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
             <div class="stat-value">₱<?= number_format($dailyAvg, 2) ?></div>
             <div class="stat-label">Daily Average</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-value"><?= number_format($uniqueCustomers) ?></div>
-            <div class="stat-label">Unique Customers</div>
-        </div>
     </div>
 
     <!-- Report Data Table -->
     <div class="data-table">
-        <h3 style="padding: 20px 20px 0; color: var(--text-dark);">
-            <i class="fas fa-<?= match($report_type) {
-                'daily' => 'calendar-day',
-                'items' => 'ice-cream',
-                'channels' => 'shopping-bag',
-                'payments' => 'credit-card',
-                default => 'table'
-            } ?>" style="color: var(--primary); margin-right: 8px;"></i>
-            <?= ucfirst(str_replace('_', ' ', $report_type)) ?> Report - <?= $date_label ?>
-        </h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 0; flex-wrap: wrap; gap: 10px;">
+            <h3 style="color: var(--text-dark); margin: 0;">
+                <i class="fas fa-<?= match($report_type) {
+                    'daily' => 'calendar-day',
+                    'items' => 'ice-cream',
+                    'channels' => 'shopping-bag',
+                    'payments' => 'credit-card',
+                    default => 'table'
+                } ?>" style="color: var(--primary); margin-right: 8px;"></i>
+                <?= ucfirst(str_replace('_', ' ', $report_type)) ?> Report - <?= $date_label ?>
+            </h3>
+            <?php if($report_type === 'daily' && $date_range === '30'): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>" class="btn-secondary" style="padding: 7px 14px; font-size: 13px;">
+                <i class="fas fa-download"></i> Export CSV
+            </a>
+            <?php endif; ?>
+        </div>
         
         <?php if(count($reportData) > 0): ?>
         <table>

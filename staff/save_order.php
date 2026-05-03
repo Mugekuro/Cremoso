@@ -6,24 +6,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $customer_name    = trim($_POST['customer_name']);
     $channel_id       = $_POST['channel_id'];
     $payment_method_id = $_POST['payment_method_id'];
+    $account_name     = trim($_POST['account_name'] ?? '');
     $cart             = json_decode($_POST['cart_data'], true);
     $branch_id        = $_SESSION['branch_id'];
     $user_id          = $_SESSION['user_id'];
 
-    // Use default customer name if empty
     if(empty($customer_name)) {
-        $customer_name = 'Walk-in Customer';
+        $customer_name = 'Anonymous Customer';
     }
 
-    // Insert customer
     $stmt = $pdo->prepare("INSERT INTO customers (customer_name) VALUES (?)");
     $stmt->execute([$customer_name]);
     $customer_id = $pdo->lastInsertId();
 
-    // Generate order number
     $order_number = 'ORD-' . date('YmdHis') . rand(100, 999);
 
-    // Calculate total
     $total = 0;
     foreach($cart as $item) {
         $total += $item['price'] * $item['qty'];
@@ -32,16 +29,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         $pdo->beginTransaction();
 
-        // Insert transaction as pending
-        $stmt = $pdo->prepare("INSERT INTO transactions (order_number, customer_id, user_id, branch_id, channel_id, payment_method_id, total_amount, status) VALUES (?,?,?,?,?,?,?,?)");
-        $stmt->execute([$order_number, $customer_id, $user_id, $branch_id, $channel_id, $payment_method_id, $total, 'pending']);
+        $stmt = $pdo->prepare("INSERT INTO transactions (order_number, customer_id, user_id, branch_id, channel_id, payment_method_id, account_name, transaction_date, total_amount, status) VALUES (?,?,?,?,?,?,?,NOW(),?,?)");
+        $stmt->execute([$order_number, $customer_id, $user_id, $branch_id, $channel_id, $payment_method_id, $account_name ?: null, $total, 'pending']);
         $transaction_id = $pdo->lastInsertId();
 
-        // Insert transaction items
         foreach($cart as $item) {
-            $stmt = $pdo->prepare("INSERT INTO transaction_items (transaction_id, item_id, quantity, unit_price, subtotal) VALUES (?,?,?,?,?)");
             $subtotal = $item['price'] * $item['qty'];
-            $stmt->execute([$transaction_id, $item['id'], $item['qty'], $item['price'], $subtotal]);
+            
+            // Get item details from database
+            $stmt = $pdo->prepare("SELECT item_name, category, size FROM items WHERE item_id = ?");
+            $stmt->execute([$item['size_price_id']]);
+            $itemData = $stmt->fetch();
+            
+            // Prepare addons JSON
+            $addons = [];
+            $addonsTotal = 0;
+            
+            foreach(['toppings', 'sauces', 'fruits', 'extras'] as $type) {
+                if (!empty($item[$type])) {
+                    foreach ($item[$type] as $addon) {
+                        $addons[] = [
+                            'type' => rtrim($type, 's'),
+                            'name' => $addon['name'],
+                            'price' => $addon['price']
+                        ];
+                        $addonsTotal += $addon['price'] * $item['qty'];
+                    }
+                }
+            }
+            
+            $addonsJson = !empty($addons) ? json_encode($addons) : null;
+            
+            $stmt = $pdo->prepare("INSERT INTO transaction_items (transaction_id, item_id, item_name, category, size, base_price, quantity, addons_detail, addons_total, subtotal) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([
+                $transaction_id,
+                $item['size_price_id'],
+                $itemData['item_name'],
+                $itemData['category'],
+                $itemData['size'],
+                $item['base_price'],
+                $item['qty'],
+                $addonsJson,
+                $addonsTotal,
+                $subtotal
+            ]);
         }
 
         $pdo->commit();
@@ -56,4 +87,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header("Location: new_order.php");
     exit();
 }
-?>

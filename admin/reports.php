@@ -25,7 +25,7 @@ $date_end = $date_config['end'] ?? 'CURDATE()';
 $date_label = $date_config['label'];
 
 // Build WHERE clause
-$whereClauses = ["transaction_date >= {$date_start}", "DATE(transaction_date) <= {$date_end}"];
+$whereClauses = ["transaction_date >= {$date_start}", "DATE(transaction_date) <= {$date_end}", "t.status = 'confirmed'"];
 $params = [];
 
 if($filter_branch) { $whereClauses[] = "t.branch_id = ?"; $params[] = $filter_branch; }
@@ -64,7 +64,8 @@ $prevMetricsSQL = "SELECT
     COALESCE(SUM(total_amount), 0) as total_revenue
     FROM transactions t 
     WHERE transaction_date < {$date_start} 
-    AND transaction_date >= DATE_SUB({$date_start}, INTERVAL ({$date_config['days']}) DAY)";
+    AND transaction_date >= DATE_SUB({$date_start}, INTERVAL ({$date_config['days']}) DAY)
+    AND t.status = 'confirmed'";
 $stmt = $pdo->prepare($prevMetricsSQL);
 $stmt->execute();
 $prevMetrics = $stmt->fetch();
@@ -268,6 +269,7 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
@@ -382,11 +384,6 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
             <div class="stat-value">₱<?= number_format($dailyAvg, 2) ?></div>
             <div class="stat-label">Daily Average</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-value"><?= number_format($uniqueCustomers) ?></div>
-            <div class="stat-label">Unique Customers</div>
-        </div>
     </div>
 
     <!-- Report Data Table -->
@@ -412,7 +409,7 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                     <?php
                     // Dynamic table headers based on report type
                     match($report_type) {
-                        'daily' => print('<th>Date</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Unique Customers</th><th>Actions</th>'),
+                        'daily' => print('<th>Date</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Actions</th>'),
                         'weekly' => print('<th>Week Period</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Actions</th>'),
                         'monthly' => print('<th>Month</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>Unique Customers</th><th>Actions</th>'),
                         'items' => print('<th>Item</th><th>Flavor</th><th>Size</th><th>Qty Sold</th><th>Times Ordered</th><th>Revenue</th><th>Avg Price</th>'),
@@ -437,9 +434,8 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                     <td><?= $row['orders'] ?></td>
                     <td class="item-price">₱<?= number_format($row['revenue'], 2) ?></td>
                     <td>₱<?= number_format($row['avg_order'], 2) ?></td>
-                    <td><?= $row['customers'] ?></td>
                     <td>
-                        <a href="transactions.php?date=<?= $row['sale_date'] ?>" class="btn-link" style="font-size: 12px;">
+                        <a href="daily_detail.php?<?= http_build_query(array_merge(['date' => $row['sale_date']], array_filter(['branch' => $filter_branch, 'channel' => $filter_channel, 'payment' => $filter_payment]))) ?>" class="btn-link" style="font-size: 12px;">
                             <i class="fas fa-eye"></i> View
                         </a>
                     </td>
@@ -531,7 +527,6 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
                     <td>TOTAL</td>
                     <td><?= array_sum(array_column($reportData, 'orders')) ?></td>
                     <td class="item-price">₱<?= number_format($totalReportRevenue, 2) ?></td>
-                    <td>-</td>
                     <td>-</td>
                     <td></td>
                     <?php elseif($report_type == 'weekly'): ?>

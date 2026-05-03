@@ -5,11 +5,11 @@ redirectIfNotAdmin();
 // === DATE RANGE FILTERS ===
 $date_range = $_GET['range'] ?? '30';
 $date_filter = match($date_range) {
-    '7' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)',
-    '30' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)',
-    '90' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)',
-    '365' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)',
-    default => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)'
+    '7' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND status = \'confirmed\'',
+    '30' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status = \'confirmed\'',
+    '90' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) AND status = \'confirmed\'',
+    '365' => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) AND status = \'confirmed\'',
+    default => 'WHERE transaction_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status = \'confirmed\''
 };
 
 $date_label = match($date_range) {
@@ -43,7 +43,7 @@ $prev_end = match($date_range) {
     default => 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)'
 };
 
-$prevFilter = "WHERE transaction_date >= {$prev_start} AND transaction_date < {$prev_end}";
+$prevFilter = "WHERE transaction_date >= {$prev_start} AND transaction_date < {$prev_end} AND status = 'confirmed'";
 $prevRevenue = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transactions {$prevFilter}")->fetchColumn();
 $prevOrders = $pdo->query("SELECT COUNT(*) FROM transactions {$prevFilter}")->fetchColumn();
 
@@ -84,26 +84,20 @@ $channelLabels = array_column($channelBreakdown, 'channel_name');
 $channelValues = array_map(fn($r) => $r['total'], $channelBreakdown);
 
 // === TOP SELLING ITEMS ===
-$topItems = $pdo->query("SELECT i.item_name, f.flavor_name, s.size_name, SUM(ti.quantity) as qty, COALESCE(SUM(ti.subtotal),0) as revenue
+$topItems = $pdo->query("SELECT ti.item_name, ti.category, ti.size, SUM(ti.quantity) as qty, COALESCE(SUM(ti.subtotal),0) as revenue
                          FROM transaction_items ti
-                         JOIN items i ON ti.item_id = i.item_id
-                         JOIN flavors f ON i.flavor_id = f.flavor_id
-                         JOIN item_sizes s ON i.size_id = s.size_id
                          JOIN transactions t ON ti.transaction_id = t.transaction_id
                          {$date_filter}
-                         GROUP BY ti.item_id
+                         GROUP BY ti.item_name, ti.category, ti.size
                          ORDER BY revenue DESC
                          LIMIT 10")->fetchAll();
 
 // === BOTTOM SELLING ITEMS ===
-$bottomItems = $pdo->query("SELECT i.item_name, f.flavor_name, s.size_name, SUM(ti.quantity) as qty, COALESCE(SUM(ti.subtotal),0) as revenue
+$bottomItems = $pdo->query("SELECT ti.item_name, ti.category, ti.size, SUM(ti.quantity) as qty, COALESCE(SUM(ti.subtotal),0) as revenue
                             FROM transaction_items ti
-                            JOIN items i ON ti.item_id = i.item_id
-                            JOIN flavors f ON i.flavor_id = f.flavor_id
-                            JOIN item_sizes s ON i.size_id = s.size_id
                             JOIN transactions t ON ti.transaction_id = t.transaction_id
                             {$date_filter}
-                            GROUP BY ti.item_id
+                            GROUP BY ti.item_name, ti.category, ti.size
                             ORDER BY revenue ASC
                             LIMIT 5")->fetchAll();
 
@@ -147,6 +141,7 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
@@ -276,7 +271,7 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
                     <tr>
                         <th>#</th>
                         <th>Item</th>
-                        <th>Flavor</th>
+                        <th>Category</th>
                         <th>Size</th>
                         <th>Qty Sold</th>
                         <th>Revenue</th>
@@ -287,8 +282,8 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
                     <tr>
                         <td><span class="status-badge status-active"><?= $idx + 1 ?></span></td>
                         <td><strong><?= htmlspecialchars($item['item_name']) ?></strong></td>
-                        <td><?= htmlspecialchars($item['flavor_name']) ?></td>
-                        <td><?= htmlspecialchars($item['size_name']) ?></td>
+                        <td><?= htmlspecialchars($item['category']) ?></td>
+                        <td><?= htmlspecialchars($item['size']) ?></td>
                         <td><?= $item['qty'] ?></td>
                         <td class="item-price">₱<?= number_format($item['revenue'], 2) ?></td>
                     </tr>
@@ -325,7 +320,7 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
                 <tr>
                     <th>#</th>
                     <th>Item</th>
-                    <th>Flavor</th>
+                    <th>Category</th>
                     <th>Size</th>
                     <th>Qty Sold</th>
                     <th>Revenue</th>
@@ -336,8 +331,8 @@ $dailyAvgOrders = $num_days > 0 ? $totalOrders / $num_days : 0;
                 <tr>
                     <td><span class="status-badge status-inactive"><?= $idx + 1 ?></span></td>
                     <td><strong><?= htmlspecialchars($item['item_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($item['flavor_name']) ?></td>
-                    <td><?= htmlspecialchars($item['size_name']) ?></td>
+                    <td><?= htmlspecialchars($item['category']) ?></td>
+                    <td><?= htmlspecialchars($item['size']) ?></td>
                     <td><?= $item['qty'] ?></td>
                     <td class="item-price">₱<?= number_format($item['revenue'], 2) ?></td>
                 </tr>

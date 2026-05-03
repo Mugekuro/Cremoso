@@ -11,7 +11,6 @@ try {
     $todayStats->execute([$today, $branch_id]);
     $todayData = $todayStats->fetch();
 } catch (PDOException $e) {
-    // Fallback if status column doesn't exist yet
     $todayStats = $pdo->prepare("SELECT COUNT(*) as orders, SUM(total_amount) as revenue FROM transactions WHERE DATE(transaction_date) = ? AND branch_id = ?");
     $todayStats->execute([$today, $branch_id]);
     $todayData = $todayStats->fetch();
@@ -28,7 +27,6 @@ try {
     $recentOrders->execute([$branch_id]);
     $recent = $recentOrders->fetchAll();
 } catch (PDOException $e) {
-    // Fallback if status column doesn't exist yet
     $recentOrders = $pdo->prepare("SELECT t.*, c.customer_name, pm.method_name
                                    FROM transactions t
                                    JOIN customers c ON t.customer_id = c.customer_id
@@ -72,24 +70,24 @@ try {
     $pendingCount->execute([$branch_id]);
     $pendingOrders = $pendingCount->fetchColumn();
 } catch (PDOException $e) {
-    // If status column doesn't exist, show 0 pending orders
     $pendingOrders = 0;
 }
 
 include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
+
+// Check if user just logged in
+$showLoginNotification = false;
+if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) {
+    $showLoginNotification = true;
+    unset($_SESSION['just_logged_in']);
+}
 ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-home"></i> Staff Dashboard</h1>
-        <div class="user-info">
-            <i class="fas fa-store"></i>
-            <span><?= htmlspecialchars($branchName) ?></span>
-            <i class="fas fa-user-circle"></i>
-            <span><?= htmlspecialchars($_SESSION['fullname']) ?></span>
-            <span class="branch-badge">Staff</span>
-        </div>
     </div>
 
     <div class="stats-grid">
@@ -108,21 +106,24 @@ include __DIR__ . '/../includes/sidebar_staff.php';
             <div class="stat-value"><?= $monthlyOrders ?></div>
             <div class="stat-label">Orders This Month</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="stat-card stat-card-green" onclick="location.href='new_order.php'" style="cursor:pointer;">
+            <div class="stat-icon" style="background: rgba(16,185,129,0.15); border-color: #6ee7b7;"><i class="fas fa-plus-circle" style="color: var(--success-dark);"></i></div>
             <div class="stat-value">
-                <a href="pending_orders.php" style="color: <?= $pendingOrders > 0 ? 'var(--warning)' : 'var(--primary)' ?>; text-decoration: none;">
+                <a href="new_order.php" style="color: var(--success-dark); text-decoration: none;">New Order</a>
+            </div>
+            <div class="stat-label">Click to create order</div>
+        </div>
+        <div class="stat-card stat-card-amber" onclick="location.href='pending_orders.php'" style="cursor:pointer;">
+            <div class="stat-icon" style="background: rgba(245,158,11,0.15); border-color: #fcd34d;"><i class="fas fa-clock" style="color: var(--warning-dark);"></i></div>
+            <div class="stat-value">
+                <a href="pending_orders.php" style="color: var(--warning-dark); text-decoration: none;">
                     <?= $pendingOrders ?>
                 </a>
             </div>
             <div class="stat-label">Pending Orders</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-plus-circle"></i></div>
-            <div class="stat-value">
-                <a href="new_order.php" style="color: var(--primary); text-decoration: none;">New Order</a>
-            </div>
-            <div class="stat-label">Click to create order</div>
         </div>
     </div>
 
@@ -160,5 +161,31 @@ include __DIR__ . '/../includes/sidebar_staff.php';
         </table>
     </div>
 </div>
+
+<!-- Login Notification -->
+<div id="loginModal" class="logout-modal" style="display: none;">
+    <div class="logout-modal-content">
+        <i class="fas fa-check-circle"></i>
+        <p>Welcome back, <?= htmlspecialchars($_SESSION['fullname']) ?>!</p>
+    </div>
+</div>
+
+<script>
+    // Show login notification if just logged in
+    <?php if ($showLoginNotification): ?>
+    window.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('loginModal');
+        modal.style.display = 'block';
+        
+        // Hide after 3 seconds
+        setTimeout(function() {
+            modal.style.opacity = '0';
+            setTimeout(function() {
+                modal.style.display = 'none';
+            }, 300);
+        }, 3000);
+    });
+    <?php endif; ?>
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

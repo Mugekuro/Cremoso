@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/auth.php';
 redirectIfNotAdmin();
 
@@ -11,14 +11,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($action === 'add') {
         $item_name = trim($_POST['item_name'] ?? '');
-        $flavor_id = (int)($_POST['flavor_id'] ?? 0);
-        $size_id = (int)($_POST['size_id'] ?? 0);
-        $base_price = (float)($_POST['base_price'] ?? 0);
+        $category = trim($_POST['category'] ?? '');
+        $base_item = trim($_POST['base_item'] ?? '');
+        $variant = trim($_POST['variant'] ?? '') ?: null;
+        $size = trim($_POST['size'] ?? '');
+        $price = (float)($_POST['price'] ?? 0);
+        $description = trim($_POST['description'] ?? '') ?: null;
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         
-        if ($item_name && $flavor_id && $size_id && $base_price > 0) {
-            $stmt = $pdo->prepare("INSERT INTO items (item_name, flavor_id, size_id, base_price, is_active) VALUES (?, ?, ?, ?, ?)");
-            if ($stmt->execute([$item_name, $flavor_id, $size_id, $base_price, $is_active])) {
+        if ($item_name && $category && $base_item && $size && $price > 0) {
+            $stmt = $pdo->prepare("INSERT INTO items (item_name, category, base_item, variant, size, price, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($stmt->execute([$item_name, $category, $base_item, $variant, $size, $price, $description, $is_active])) {
                 $message = 'Item added successfully!';
                 $message_type = 'success';
             } else {
@@ -34,14 +37,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'edit') {
         $item_id = (int)($_POST['item_id'] ?? 0);
         $item_name = trim($_POST['item_name'] ?? '');
-        $flavor_id = (int)($_POST['flavor_id'] ?? 0);
-        $size_id = (int)($_POST['size_id'] ?? 0);
-        $base_price = (float)($_POST['base_price'] ?? 0);
+        $category = trim($_POST['category'] ?? '');
+        $base_item = trim($_POST['base_item'] ?? '');
+        $variant = trim($_POST['variant'] ?? '') ?: null;
+        $size = trim($_POST['size'] ?? '');
+        $price = (float)($_POST['price'] ?? 0);
+        $description = trim($_POST['description'] ?? '') ?: null;
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         
-        if ($item_id && $item_name && $flavor_id && $size_id && $base_price > 0) {
-            $stmt = $pdo->prepare("UPDATE items SET item_name = ?, flavor_id = ?, size_id = ?, base_price = ?, is_active = ? WHERE item_id = ?");
-            if ($stmt->execute([$item_name, $flavor_id, $size_id, $base_price, $is_active, $item_id])) {
+        if ($item_id && $item_name && $category && $base_item && $size && $price > 0) {
+            $stmt = $pdo->prepare("UPDATE items SET item_name = ?, category = ?, base_item = ?, variant = ?, size = ?, price = ?, description = ?, is_active = ? WHERE item_id = ?");
+            if ($stmt->execute([$item_name, $category, $base_item, $variant, $size, $price, $description, $is_active, $item_id])) {
                 $message = 'Item updated successfully!';
                 $message_type = 'success';
             } else {
@@ -84,34 +90,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Get filter parameters
-$filter_flavor = $_GET['flavor'] ?? '';
+$filter_category = $_GET['category'] ?? '';
 $filter_size = $_GET['size'] ?? '';
 $filter_status = $_GET['status'] ?? '';
+$search = $_GET['search'] ?? '';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$perPage = 10;
+$perPage = 15;
 $offset = ($page - 1) * $perPage;
 
 // Build WHERE clause
 $whereClause = "WHERE 1=1";
 $params = [];
-if ($filter_flavor) { $whereClause .= " AND i.flavor_id = ?"; $params[] = $filter_flavor; }
-if ($filter_size) { $whereClause .= " AND i.size_id = ?"; $params[] = $filter_size; }
-if ($filter_status !== '') { $whereClause .= " AND i.is_active = ?"; $params[] = (int)$filter_status; }
+if ($filter_category) { $whereClause .= " AND category = ?"; $params[] = $filter_category; }
+if ($filter_size) { $whereClause .= " AND size = ?"; $params[] = $filter_size; }
+if ($filter_status !== '') { $whereClause .= " AND is_active = ?"; $params[] = (int)$filter_status; }
+if ($search) { $whereClause .= " AND (item_name LIKE ? OR variant LIKE ? OR base_item LIKE ?)"; $searchParam = "%{$search}%"; $params[] = $searchParam; $params[] = $searchParam; $params[] = $searchParam; }
 
 // Get total count
-$countSql = "SELECT COUNT(*) FROM items i {$whereClause}";
+$countSql = "SELECT COUNT(*) FROM items {$whereClause}";
 $countStmt = $pdo->prepare($countSql);
 $countStmt->execute($params);
 $totalRecords = $countStmt->fetchColumn();
 $totalPages = ceil($totalRecords / $perPage);
 
 // Get paginated items
-$sql = "SELECT i.*, f.flavor_name, s.size_name, s.price_multiplier
-        FROM items i
-        JOIN flavors f ON i.flavor_id = f.flavor_id
-        JOIN item_sizes s ON i.size_id = s.size_id
+$sql = "SELECT * FROM items
         {$whereClause}
-        ORDER BY i.item_id DESC
+        ORDER BY display_order ASC, item_id DESC
         LIMIT :limit OFFSET :offset";
 $stmt = $pdo->prepare($sql);
 foreach ($params as $i => $param) {
@@ -122,9 +127,9 @@ $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $items = $stmt->fetchAll();
 
-// Get flavors and sizes for filters and forms
-$flavors = $pdo->query("SELECT * FROM flavors ORDER BY flavor_name")->fetchAll();
-$sizes = $pdo->query("SELECT * FROM item_sizes ORDER BY size_name")->fetchAll();
+// Get distinct categories and sizes for filters
+$categories = $pdo->query("SELECT DISTINCT category FROM items ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
+$sizes = $pdo->query("SELECT DISTINCT size FROM items ORDER BY size")->fetchAll(PDO::FETCH_COLUMN);
 
 // Get edit item if requested
 $edit_item = null;
@@ -137,15 +142,11 @@ if (isset($_GET['edit'])) {
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
+<?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-ice-cream"></i> Menu Items</h1>
-        <div class="user-info">
-            <i class="fas fa-user-circle"></i>
-            <span><?= htmlspecialchars($_SESSION['fullname']) ?></span>
-            <span class="branch-badge">Admin</span>
-        </div>
     </div>
 
     <?php if ($message): ?>
@@ -159,12 +160,16 @@ if (isset($_GET['edit'])) {
     <div class="filter-card">
         <form method="GET" class="filter-form">
             <div class="filter-group">
-                <label><i class="fas fa-candy-cane"></i> Flavor</label>
-                <select name="flavor">
-                    <option value="">All Flavors</option>
-                    <?php foreach ($flavors as $f): ?>
-                    <option value="<?= $f['flavor_id'] ?>" <?= $filter_flavor == $f['flavor_id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($f['flavor_name']) ?>
+                <label><i class="fas fa-search"></i> Search</label>
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search items...">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-layer-group"></i> Category</label>
+                <select name="category">
+                    <option value="">All Categories</option>
+                    <?php foreach ($categories as $cat): ?>
+                    <option value="<?= htmlspecialchars($cat) ?>" <?= $filter_category == $cat ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cat) ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -174,8 +179,8 @@ if (isset($_GET['edit'])) {
                 <select name="size">
                     <option value="">All Sizes</option>
                     <?php foreach ($sizes as $s): ?>
-                    <option value="<?= $s['size_id'] ?>" <?= $filter_size == $s['size_id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($s['size_name']) ?>
+                    <option value="<?= htmlspecialchars($s) ?>" <?= $filter_size == $s ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($s) ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -221,7 +226,7 @@ if (isset($_GET['edit'])) {
         </div>
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-coins"></i></div>
-            <div class="stat-value">₱<?= number_format($items ? min(array_column($items, 'base_price')) : 0, 2) ?></div>
+            <div class="stat-value">₱<?= number_format($items ? min(array_column($items, 'price')) : 0, 2) ?></div>
             <div class="stat-label">Lowest Price (Page)</div>
         </div>
     </div>
@@ -242,28 +247,36 @@ if (isset($_GET['edit'])) {
                     <input type="text" name="item_name" value="<?= htmlspecialchars($edit_item['item_name']) ?>" required>
                 </div>
                 <div class="form-group">
-                    <label>Flavor *</label>
-                    <select name="flavor_id" required>
-                        <?php foreach ($flavors as $f): ?>
-                        <option value="<?= $f['flavor_id'] ?>" <?= $edit_item['flavor_id'] == $f['flavor_id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($f['flavor_name']) ?>
+                    <label>Category *</label>
+                    <select name="category" required>
+                        <option value="">Select...</option>
+                        <?php foreach ($categories as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat) ?>" <?= $edit_item['category'] == $cat ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat) ?>
                         </option>
                         <?php endforeach; ?>
+                        <option value="Other">Other (type below)</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label>Base Item *</label>
+                    <input type="text" name="base_item" value="<?= htmlspecialchars($edit_item['base_item']) ?>" required>
+                </div>
+                <div class="form-group">
+                    <label>Variant/Flavor</label>
+                    <input type="text" name="variant" value="<?= htmlspecialchars($edit_item['variant'] ?? '') ?>">
                 </div>
                 <div class="form-group">
                     <label>Size *</label>
-                    <select name="size_id" required>
-                        <?php foreach ($sizes as $s): ?>
-                        <option value="<?= $s['size_id'] ?>" <?= $edit_item['size_id'] == $s['size_id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($s['size_name']) ?> (x<?= number_format($s['price_multiplier'], 2) ?>)
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="text" name="size" value="<?= htmlspecialchars($edit_item['size']) ?>" required>
                 </div>
                 <div class="form-group">
-                    <label>Base Price (₱) *</label>
-                    <input type="number" step="0.01" min="0" name="base_price" value="<?= $edit_item['base_price'] ?>" required>
+                    <label>Price (₱) *</label>
+                    <input type="number" step="0.01" min="0" name="price" value="<?= $edit_item['price'] ?>" required>
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Description</label>
+                    <textarea name="description" rows="2"><?= htmlspecialchars($edit_item['description'] ?? '') ?></textarea>
                 </div>
                 <div class="form-group">
                     <label style="display: flex; align-items: center; gap: 8px;">
@@ -288,10 +301,10 @@ if (isset($_GET['edit'])) {
                 <tr>
                     <th>ID</th>
                     <th>Item Name</th>
-                    <th>Flavor</th>
+                    <th>Category</th>
+                    <th>Variant</th>
                     <th>Size</th>
-                    <th>Base Price</th>
-                    <th>Multiplier</th>
+                    <th>Price</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -301,10 +314,10 @@ if (isset($_GET['edit'])) {
                 <tr>
                     <td><span class="status-badge status-active"><?= $item['item_id'] ?></span></td>
                     <td><strong><?= htmlspecialchars($item['item_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($item['flavor_name']) ?></td>
-                    <td><?= htmlspecialchars($item['size_name']) ?></td>
-                    <td class="item-price">₱<?= number_format($item['base_price'], 2) ?></td>
-                    <td>x<?= number_format($item['price_multiplier'], 2) ?></td>
+                    <td><?= htmlspecialchars($item['category']) ?></td>
+                    <td><?= htmlspecialchars($item['variant'] ?? '-') ?></td>
+                    <td><?= htmlspecialchars($item['size']) ?></td>
+                    <td class="item-price">₱<?= number_format($item['price'], 2) ?></td>
                     <td>
                         <?php if ($item['is_active']): ?>
                         <span class="status-badge status-active"><i class="fas fa-check-circle"></i> Active</span>
@@ -347,16 +360,17 @@ if (isset($_GET['edit'])) {
 
     <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
-    <div class="pagination-container">
+    <div class="pagination-container" style="margin-top: 40px;">
         <div class="pagination-info">
             Showing <?= count($items) ?> of <?= number_format($totalRecords) ?> items (Page <?= $page ?> of <?= $totalPages ?>)
         </div>
         <div class="pagination-buttons">
             <?php
             $queryString = http_build_query(array_filter([
-                'flavor' => $filter_flavor,
+                'category' => $filter_category,
                 'size' => $filter_size,
-                'status' => $filter_status
+                'status' => $filter_status,
+                'search' => $search
             ]));
             $separator = $queryString ? '&' : '';
             ?>
@@ -404,32 +418,45 @@ if (isset($_GET['edit'])) {
             
             <div class="form-group">
                 <label>Item Name *</label>
-                <input type="text" name="item_name" placeholder="e.g., Soft Serve, Milkshake" required>
+                <input type="text" name="item_name" placeholder="e.g., Soft-serve - Vanilla - Cone" required>
             </div>
             
             <div class="form-group">
-                <label>Flavor *</label>
-                <select name="flavor_id" required>
-                    <option value="">Select flavor...</option>
-                    <?php foreach ($flavors as $f): ?>
-                    <option value="<?= $f['flavor_id'] ?>"><?= htmlspecialchars($f['flavor_name']) ?></option>
-                    <?php endforeach; ?>
+                <label>Category *</label>
+                <select name="category" required>
+                    <option value="">Select category...</option>
+                    <option value="Soft-serve">Soft-serve</option>
+                    <option value="Cremdae">Cremdae</option>
+                    <option value="Parfait">Parfait</option>
+                    <option value="Frozen Yogurt">Frozen Yogurt</option>
+                    <option value="Float">Float</option>
+                    <option value="Yogurt">Yogurt</option>
                 </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Base Item *</label>
+                <input type="text" name="base_item" placeholder="e.g., Soft-serve, Parfait" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Variant/Flavor</label>
+                <input type="text" name="variant" placeholder="e.g., Vanilla, Chocolate (optional)">
             </div>
             
             <div class="form-group">
                 <label>Size *</label>
-                <select name="size_id" required>
-                    <option value="">Select size...</option>
-                    <?php foreach ($sizes as $s): ?>
-                    <option value="<?= $s['size_id'] ?>"><?= htmlspecialchars($s['size_name']) ?> (x<?= number_format($s['price_multiplier'], 2) ?>)</option>
-                    <?php endforeach; ?>
-                </select>
+                <input type="text" name="size" placeholder="e.g., Cone, Moyen (8oz), Grande (12oz)" required>
             </div>
             
             <div class="form-group">
-                <label>Base Price (₱) *</label>
-                <input type="number" step="0.01" min="0" name="base_price" placeholder="0.00" required>
+                <label>Price (₱) *</label>
+                <input type="number" step="0.01" min="0" name="price" placeholder="0.00" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="2" placeholder="Optional description"></textarea>
             </div>
             
             <div class="form-group">

@@ -7,26 +7,26 @@ USE cremoso_db;
 -- =====================================================
 
 -- Additional customers
-INSERT INTO customers (customer_name, contact) VALUES
-('Juan Dela Cruz', '0917-123-4567'),
-('Maria Santos', '0918-234-5678'),
-('Pedro Reyes', '0919-345-6789'),
-('Ana Garcia', '0920-456-7890'),
-('Carlos Mendoza', '0921-567-8901'),
-('Rosa Villanueva', '0922-678-9012'),
-('Jose Torres', '0923-789-0123'),
-('Luz Fernandez', '0924-890-1234'),
-('Miguel Castro', '0925-901-2345'),
-('Elena Ramos', '0926-012-3456'),
-('Andres Bautista', '0927-123-4567'),
-('Sofia Cruz', '0928-234-5678'),
-('Rafael Aquino', '0929-345-6789'),
-('Carmen Lopez', '0930-456-7890'),
-('Diego Morales', '0931-567-8901'),
-('Isabel Reyes', '0932-678-9012'),
-('Francisco Santos', '0933-789-0123'),
-('Gabriela Diaz', '0934-890-1234'),
-('Ricardo Cruz', '0935-901-2345');
+INSERT INTO customers (customer_name) VALUES
+('Juan Dela Cruz'),
+('Maria Santos'),
+('Pedro Reyes'),
+('Ana Garcia'),
+('Carlos Mendoza'),
+('Rosa Villanueva'),
+('Jose Torres'),
+('Luz Fernandez'),
+('Miguel Castro'),
+('Elena Ramos'),
+('Andres Bautista'),
+('Sofia Cruz'),
+('Rafael Aquino'),
+('Carmen Lopez'),
+('Diego Morales'),
+('Isabel Reyes'),
+('Francisco Santos'),
+('Gabriela Diaz'),
+('Ricardo Cruz');
 
 -- =====================================================
 -- TRANSACTIONS (spread across last 7 days + today)
