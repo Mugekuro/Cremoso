@@ -66,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 }
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
-<?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
@@ -172,44 +172,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     <li>Avoid using common words or personal information</li>
                     <li>Change your password regularly</li>
                 </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Account Statistics -->
-    <div class="data-table" style="margin-top: 24px;">
-        <h3 style="padding: 20px 20px 0; color: var(--text-dark);">
-            <i class="fas fa-chart-pie" style="color: var(--primary); margin-right: 8px;"></i>
-            Account Activity Summary
-        </h3>
-        <div style="padding: 24px;">
-            <?php
-            $totalTransactions = $pdo->query("SELECT COUNT(*) FROM transactions WHERE user_id = {$_SESSION['user_id']}")->fetchColumn();
-            $totalRevenue = $pdo->query("SELECT COALESCE(SUM(total_amount), 0) FROM transactions WHERE user_id = {$_SESSION['user_id']}")->fetchColumn();
-            $todayTransactions = $pdo->query("SELECT COUNT(*) FROM transactions WHERE user_id = {$_SESSION['user_id']} AND DATE(transaction_date) = CURDATE()")->fetchColumn();
-            $monthTransactions = $pdo->query("SELECT COUNT(*) FROM transactions WHERE user_id = {$_SESSION['user_id']} AND MONTH(transaction_date) = MONTH(CURDATE()) AND YEAR(transaction_date) = YEAR(CURDATE())")->fetchColumn();
-            ?>
-            <div class="stats-grid" style="margin-bottom: 0;">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-receipt"></i></div>
-                    <div class="stat-value"><?= number_format($totalTransactions) ?></div>
-                    <div class="stat-label">Total Transactions</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-coins"></i></div>
-                    <div class="stat-value">₱<?= number_format($totalRevenue, 2) ?></div>
-                    <div class="stat-label">Total Revenue Handled</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
-                    <div class="stat-value"><?= number_format($todayTransactions) ?></div>
-                    <div class="stat-label">Today's Transactions</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
-                    <div class="stat-value"><?= number_format($monthTransactions) ?></div>
-                    <div class="stat-label">This Month's Transactions</div>
-                </div>
             </div>
         </div>
     </div>

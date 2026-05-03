@@ -8,42 +8,39 @@ $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
-// Build base WHERE clause for counting and fetching
+// Build base WHERE clause
 $whereClause = "WHERE t.status = 'completed'";
 $params = [];
-if($filter_branch) { $whereClause .= " AND t.branch_id = ?"; $params[] = $filter_branch; }
-if($filter_date)   { $whereClause .= " AND DATE(t.transaction_date) = ?"; $params[] = $filter_date; }
+if($filter_branch) { 
+    $whereClause .= " AND t.branch_id = ?"; 
+    $params[] = $filter_branch; 
+}
+if($filter_date) { 
+    $whereClause .= " AND DATE(t.transaction_date) = ?"; 
+    $params[] = $filter_date; 
+}
 
-// Get total count for pagination
+// Get total count
 $countSql = "SELECT COUNT(*) FROM transactions t {$whereClause}";
 $countStmt = $pdo->prepare($countSql);
 $countStmt->execute($params);
 $totalRecords = $countStmt->fetchColumn();
 $totalPages = ceil($totalRecords / $perPage);
 
-// Get paginated transactions
-$sql = "SELECT t.*, c.customer_name, u.fullname as staff, b.branch_name, oc.channel_name, pm.method_name
+// Get transactions
+$sql = "SELECT t.transaction_id, t.order_number, t.transaction_date, 
+               b.branch_name, t.total_amount, pm.method_name, t.status
         FROM transactions t
-        JOIN customers c ON t.customer_id = c.customer_id
-        JOIN users u ON t.user_id = u.user_id
         JOIN branches b ON t.branch_id = b.branch_id
-        JOIN order_channels oc ON t.channel_id = oc.channel_id
         JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
         {$whereClause}
         ORDER BY t.transaction_date DESC
-        LIMIT :limit OFFSET :offset";
+        LIMIT {$perPage} OFFSET {$offset}";
 $stmt = $pdo->prepare($sql);
-foreach($params as $i => $param) {
-    $stmt->bindValue($i + 1, $param);
-}
-$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$stmt->execute();
+$stmt->execute($params);
 $transactions = $stmt->fetchAll();
 
-$branches = $pdo->query("SELECT * FROM branches")->fetchAll();
-
-$totalRevenue = array_sum(array_column($transactions, 'total_amount'));
+$branches = $pdo->query("SELECT * FROM branches ORDER BY branch_name")->fetchAll();
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
@@ -62,17 +59,19 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
                 <select name="branch">
                     <option value="">All Branches</option>
                     <?php foreach($branches as $b): ?>
-                    <option value="<?= $b['branch_id'] ?>" <?= $filter_branch==$b['branch_id']?'selected':'' ?>><?= htmlspecialchars($b['branch_name']) ?></option>
+                    <option value="<?= $b['branch_id'] ?>" <?= $filter_branch==$b['branch_id']?'selected':'' ?>>
+                        <?= htmlspecialchars($b['branch_name']) ?>
+                    </option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="filter-group">
                 <label><i class="fas fa-calendar-alt"></i> Date</label>
-                <input type="date" name="date" value="<?= $filter_date ?>">
+                <input type="date" name="date" value="<?= htmlspecialchars($filter_date) ?>">
             </div>
             <div class="filter-actions">
-                <button type="submit" class="btn-primary"><i class="fas fa-search"></i> Filter</button>
-                <a href="transactions.php" class="btn-secondary"><i class="fas fa-rotate-left"></i> Reset</a>
+                <button type="submit" class="btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>
+                <a href="transactions.php" class="btn-secondary"><i class="fas fa-times"></i> Reset</a>
             </div>
         </form>
     </div>
@@ -82,60 +81,57 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-receipt"></i></div>
             <div class="stat-value"><?= count($transactions) ?></div>
-            <div class="stat-label">Transactions on Page <?= $page ?></div>
+            <div class="stat-label">Transactions on Page</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-database"></i></div>
             <div class="stat-value"><?= number_format($totalRecords) ?></div>
             <div class="stat-label">Total Records</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-coins"></i></div>
-            <div class="stat-value">₱<?= number_format($totalRevenue, 2) ?></div>
-            <div class="stat-label">Page Revenue</div>
-        </div>
     </div>
 
+    <!-- Transactions Table -->
     <div class="data-table">
         <table>
             <thead>
                 <tr>
                     <th>Order #</th>
-                    <th>Branch</th>
-                    <th>Customer</th>
-                    <th>Total</th>
-                    <th>Payment</th>
-                    <th>Channel</th>
-                    <th>Status</th>
-                    <th>Staff</th>
                     <th>Date</th>
+                    <th>Branch</th>
+                    <th>Total Amount</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($transactions as $t): ?>
-                <tr>
-                    <td><strong><?= $t['order_number'] ?></strong></td>
-                    <td><?= htmlspecialchars($t['branch_name']) ?></td>
-                    <td><?= htmlspecialchars($t['customer_name']) ?></td>
-                    <td>₱<?= number_format($t['total_amount'],2) ?></td>
-                    <td><?= htmlspecialchars($t['method_name']) ?></td>
-                    <td><?= htmlspecialchars($t['channel_name']) ?></td>
-                    <td><span class="status-badge <?= $t['status'] == 'completed' ? 'status-success' : 'status-error' ?>"><?= ucfirst($t['status']) ?></span></td>
-                    <td><?= htmlspecialchars($t['staff']) ?></td>
-                    <td><?= date('M d, Y h:i A', strtotime($t['transaction_date'])) ?></td>
-                </tr>
-                <?php endforeach; ?>
-                <?php if(count($transactions) == 0): ?>
-                <tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
-                    No transactions found
-                </td></tr>
+                <?php if(count($transactions) > 0): ?>
+                    <?php foreach($transactions as $t): ?>
+                    <tr>
+                        <td><strong><?= htmlspecialchars($t['order_number']) ?></strong></td>
+                        <td style="font-size: 12px; color: var(--text-muted);"><?= date('M d, Y g:i A', strtotime($t['transaction_date'])) ?></td>
+                        <td><?= htmlspecialchars($t['branch_name']) ?></td>
+                        <td class="item-price">₱<?= number_format($t['total_amount'], 2) ?></td>
+                        <td><?= htmlspecialchars($t['method_name']) ?></td>
+                        <td>
+                            <span class="status-badge status-completed">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </span>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
+                            No transactions found
+                        </td>
+                    </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <!-- Pagination Controls -->
+    <!-- Pagination Container -->
     <?php if($totalPages > 1): ?>
     <div class="pagination-container">
         <div class="pagination-info">
@@ -143,7 +139,6 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
         </div>
         <div class="pagination-buttons">
             <?php
-            // Build query string preserving filters
             $queryString = http_build_query(array_filter([
                 'branch' => $filter_branch,
                 'date' => $filter_date
@@ -152,11 +147,11 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
             ?>
             
             <?php if($page > 1): ?>
-                <a href="?page=<?= $page - 1 ?><?= $separator ? $separator . $queryString : '' ?>" class="btn-secondary">
+                <a href="?page=<?= $page - 1 ?><?= $separator . $queryString ?>" class="btn-secondary">
                     <i class="fas fa-chevron-left"></i> Previous
                 </a>
             <?php else: ?>
-                <span class="btn-disabled" style="opacity: 0.5; cursor: not-allowed;">
+                <span class="btn-disabled">
                     <i class="fas fa-chevron-left"></i> Previous
                 </span>
             <?php endif; ?>
@@ -164,11 +159,11 @@ $totalRevenue = array_sum(array_column($transactions, 'total_amount'));
             <span class="page-indicator"><?= $page ?> / <?= $totalPages ?></span>
 
             <?php if($page < $totalPages): ?>
-                <a href="?page=<?= $page + 1 ?><?= $separator ? $separator . $queryString : '' ?>" class="btn-primary">
+                <a href="?page=<?= $page + 1 ?><?= $separator . $queryString ?>" class="btn-primary">
                     Next <i class="fas fa-chevron-right"></i>
                 </a>
             <?php else: ?>
-                <span class="btn-disabled" style="opacity: 0.5; cursor: not-allowed;">
+                <span class="btn-disabled">
                     Next <i class="fas fa-chevron-right"></i>
                 </span>
             <?php endif; ?>
