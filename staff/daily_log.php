@@ -22,6 +22,7 @@ $dailyTotal = array_sum(array_column($transactions, 'total_amount'));
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
+include __DIR__ . '/../includes/mobile_navbar_staff.php';
 ?>
 
 <div class="main-content">

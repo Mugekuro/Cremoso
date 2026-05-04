@@ -221,6 +221,7 @@ include __DIR__ . '/../includes/header.php';
 <?php
 include __DIR__ . '/../includes/sidebar_admin.php';
 include __DIR__ . '/../includes/topnav_admin.php';
+include __DIR__ . '/../includes/mobile_navbar_admin.php';
 ?>
 
 

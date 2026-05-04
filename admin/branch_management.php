@@ -95,6 +95,7 @@ $inactiveBranches = array_filter($branches, fn($b) => !$b['is_active']);
 <link rel="stylesheet" href="../assets/css/admin.css">
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/mobile_navbar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">

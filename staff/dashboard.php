@@ -78,6 +78,7 @@ try {
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
+include __DIR__ . '/../includes/mobile_navbar_staff.php';
 
 // Check if user just logged in
 $showLoginNotification = false;

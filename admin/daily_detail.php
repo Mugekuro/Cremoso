@@ -249,6 +249,7 @@ if(isset($_GET['export']) && $_GET['export'] == 'csv') {
 <link rel="stylesheet" href="../assets/css/admin.css">
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/mobile_navbar_admin.php'; ?>
 
 <div class="main-content">
     <!-- Page Header -->

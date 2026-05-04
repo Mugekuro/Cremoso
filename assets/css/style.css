@@ -2366,3 +2366,397 @@ body {
     background: var(--border);
     transform: translateY(-2px);
 }
+
+
+/* =============================
+   MOBILE NAVBAR (≤768px)
+   ============================= */
+.mobile-navbar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    z-index: 1100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-navbar-scroll {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mobile-navbar-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 16px;
+    min-width: 80px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.mobile-nav-item i {
+    font-size: 20px;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+}
+
+.mobile-nav-item:hover {
+    color: var(--primary);
+    background: var(--primary-pale);
+}
+
+.mobile-nav-item:hover i {
+    color: var(--primary);
+}
+
+.mobile-nav-item.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--primary-muted);
+}
+
+.mobile-nav-item.active i {
+    color: var(--primary);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    /* Show mobile navbar, hide sidebar and topnav */
+    .mobile-navbar {
+        display: block;
+    }
+
+    .sidebar {
+        display: none !important;
+    }
+
+    .topnav {
+        display: none !important;
+    }
+
+    /* Adjust body and main content for mobile navbar */
+    body {
+        padding-top: 58px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+        padding-top: 16px;
+    }
+
+    /* Stats grid - 2 columns on mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 16px 12px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 24px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 12px;
+    }
+
+    .stat-card .stat-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .stat-card .stat-icon i {
+        font-size: 20px;
+    }
+
+    /* Charts - stack vertically */
+    .charts-grid,
+    .dashboard-two-column,
+    .analytics-two-column,
+    .analytics-pie-charts,
+    .profile-two-column {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .chart-card {
+        padding: 16px;
+    }
+
+    .chart-card canvas {
+        max-height: 240px !important;
+    }
+
+    /* Tables - horizontal scroll */
+    .data-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table table {
+        min-width: 600px;
+        font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .data-table th {
+        font-size: 11px;
+    }
+
+    /* Forms - single column */
+    .form-grid,
+    .filter-form {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .btn-primary,
+    .btn-secondary {
+        min-height: 44px;
+        font-size: 14px;
+    }
+
+    /* Page headers */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 16px;
+        gap: 10px;
+    }
+
+    .page-header h1 {
+        font-size: 18px;
+    }
+
+    /* Modals - near full screen */
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        padding: 20px;
+        border-radius: 16px;
+        max-height: 90vh;
+    }
+
+    /* Filter cards */
+    .filter-card {
+        padding: 14px 16px;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-buttons .btn-primary,
+    .action-buttons .btn-secondary {
+        width: 100%;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .pagination-info {
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .pagination-buttons {
+        justify-content: center;
+    }
+}
+
+
+
+/* Additional mobile polish for specific components */
+@media (max-width: 768px) {
+    /* Ensure filter groups stack properly */
+    .filter-group {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Button groups */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .btn-group .btn-primary,
+    .btn-group .btn-secondary {
+        width: 100%;
+    }
+
+    /* Ensure all buttons are touch-friendly */
+    button,
+    .btn,
+    a.btn-primary,
+    a.btn-secondary {
+        min-height: 44px;
+        padding: 12px 20px;
+    }
+
+    /* Table action buttons */
+    .data-table .btn-sm {
+        min-height: 36px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    /* Status badges */
+    .status-badge {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+    /* Chart card titles */
+    .chart-card h3 {
+        font-size: 14px !important;
+    }
+
+    /* Reduce margins on mobile */
+    .chart-card,
+    .stat-card,
+    .data-table {
+        margin-bottom: 12px !important;
+    }
+
+    /* Ensure proper spacing for dashboard sections */
+    .dashboard-two-column,
+    .analytics-two-column {
+        margin-top: 16px !important;
+    }
+
+    /* Make sure inline flex forms wrap properly */
+    form[style*="display: flex"] {
+        flex-wrap: wrap !important;
+    }
+
+    /* Dropdown menus */
+    select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232DA89B' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+    }
+
+    /* Improve touch targets for links in tables */
+    .data-table a {
+        padding: 8px 4px;
+        display: inline-block;
+    }
+
+    /* Better spacing for page sections */
+    .main-content > * + * {
+        margin-top: 16px;
+    }
+
+    /* Notification badges in mobile nav */
+    .mobile-nav-item span {
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Ensure modals don't overflow */
+    .modal-content {
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    /* Better input styling on mobile */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    /* Improve table readability */
+    .data-table tbody tr {
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Better pagination on mobile */
+    .pagination-buttons .btn-primary,
+    .pagination-buttons .btn-secondary {
+        min-width: 100px;
+    }
+
+    /* Hide less important columns on very small screens */
+    @media (max-width: 480px) {
+        .mobile-navbar-scroll {
+            padding: 0 8px;
+        }
+
+        .mobile-nav-item {
+            min-width: 70px;
+            padding: 10px 12px;
+            font-size: 11px;
+        }
+
+        .mobile-nav-item i {
+            font-size: 18px;
+        }
+
+        /* Even more compact stats on small phones */
+        .stats-grid {
+            gap: 8px;
+        }
+
+        .stat-card {
+            padding: 12px 10px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 20px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 11px;
+        }
+    }
+}

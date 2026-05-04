@@ -15,6 +15,7 @@ $extras = getActiveExtras();
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/topnav_staff.php';
 include __DIR__ . '/../includes/sidebar_staff.php';
+include __DIR__ . '/../includes/mobile_navbar_staff.php';
 ?>
 <link rel="stylesheet" href="../assets/css/staff.css">
 

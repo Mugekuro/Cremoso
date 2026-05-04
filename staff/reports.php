@@ -89,7 +89,8 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_staff.php'; ?>
-<?php include __DIR__ . '/../includes/sidebar_staff.php'; ?>
+<?php include __DIR__ . '/../includes/sidebar_staff.php';
+include __DIR__ . '/../includes/mobile_navbar_staff.php'; ?>
 
 <div class="main-content">
     <div class="page-header">

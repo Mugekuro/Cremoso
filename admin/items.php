@@ -89,7 +89,7 @@ $totalPages = ceil($totalRecords / $perPage);
 // Get paginated items
 $sql = "SELECT * FROM items
         {$whereClause}
-        ORDER BY display_order ASC, item_id DESC
+        ORDER BY item_id ASC
         LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
 foreach ($params as $i => $param) {
@@ -106,6 +106,7 @@ $categories = $pdo->query("SELECT DISTINCT category FROM items ORDER BY category
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/mobile_navbar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">

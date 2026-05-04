@@ -11,10 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $item_name = trim($_POST['item_name'] ?? '');
     $category = trim($_POST['category'] ?? '');
     $base_item = trim($_POST['base_item'] ?? '');
-    $variant = trim($_POST['variant'] ?? '') ?: null;
+    $variant = trim($_POST['variant'] ?? '') ?: 'N/A';
     $size = trim($_POST['size'] ?? '');
     $price = (float)($_POST['price'] ?? 0);
-    $description = trim($_POST['description'] ?? '') ?: null;
+    $description = trim($_POST['description'] ?? '') ?: 'N/A';
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     
     // Store form data for repopulation on error
@@ -63,6 +63,7 @@ $sizes = $pdo->query("SELECT DISTINCT size FROM items ORDER BY size")->fetchAll(
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/mobile_navbar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">

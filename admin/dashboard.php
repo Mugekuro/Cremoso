@@ -101,6 +101,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/mobile_navbar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">

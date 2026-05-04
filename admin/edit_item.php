@@ -84,6 +84,7 @@ $sizes = $pdo->query("SELECT DISTINCT size FROM items ORDER BY size")->fetchAll(
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 <?php include __DIR__ . '/../includes/topnav_admin.php'; ?>
+<?php include __DIR__ . '/../includes/mobile_navbar_admin.php'; ?>
 
 <div class="main-content">
     <div class="page-header">
