@@ -161,7 +161,17 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
         <h3 style="padding: 20px 20px 0; color: var(--text-dark); font-weight: bold;">
             <i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i>Recent Transactions
         </h3>
-        <table>
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 14%;">
+                <col style="width: 12%;">
+                <col style="width: 13%;">
+                <col style="width: 11%;">
+                <col style="width: 10%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 16%;">
+            </colgroup>
             <thead>
                 <tr>
                     <th>Order #</th>
@@ -170,6 +180,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                     <th>Total</th>
                     <th>Payment</th>
                     <th>Status</th>
+                    <th>Staff</th>
                     <th>Date</th>
                 </tr>
             </thead>
@@ -182,11 +193,12 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                     <td class="item-price">₱<?= number_format($t['total_amount'], 2) ?></td>
                     <td><?= htmlspecialchars($t['method_name']) ?></td>
                     <td><span class="status-badge <?= $t['status'] == 'completed' ? 'status-completed' : 'status-pending' ?>"><?= ucfirst($t['status']) ?></span></td>
+                    <td><?= htmlspecialchars($t['staff']) ?></td>
                     <td style="font-size: 12px; color: var(--text-muted);"><?= date('M d, h:i A', strtotime($t['transaction_date'])) ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if (count($recentTxns) == 0): ?>
-                <tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
                     No transactions found
                 </td></tr>

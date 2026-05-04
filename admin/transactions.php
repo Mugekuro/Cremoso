@@ -29,10 +29,12 @@ $totalPages = ceil($totalRecords / $perPage);
 
 // Get transactions
 $sql = "SELECT t.transaction_id, t.order_number, t.transaction_date, 
-               b.branch_name, t.total_amount, pm.method_name, t.status
+               b.branch_name, t.total_amount, pm.method_name, t.status,
+               u.fullname as staff
         FROM transactions t
         JOIN branches b ON t.branch_id = b.branch_id
         JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
+        JOIN users u ON t.user_id = u.user_id
         {$whereClause}
         ORDER BY t.transaction_date DESC
         LIMIT {$perPage} OFFSET {$offset}";
@@ -92,7 +94,16 @@ $branches = $pdo->query("SELECT * FROM branches ORDER BY branch_name")->fetchAll
 
     <!-- Transactions Table -->
     <div class="data-table">
-        <table>
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 15%;">
+                <col style="width: 13%;">
+                <col style="width: 18%;">
+                <col style="width: 12%;">
+                <col style="width: 11%;">
+                <col style="width: 14%;">
+                <col style="width: 17%;">
+            </colgroup>
             <thead>
                 <tr>
                     <th>Order #</th>
@@ -100,7 +111,8 @@ $branches = $pdo->query("SELECT * FROM branches ORDER BY branch_name")->fetchAll
                     <th>Branch</th>
                     <th>Total Amount</th>
                     <th>Payment Method</th>
-                    <th>Status</th>
+                    <th>Staff</th>
+                    <th style="text-align: center;">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -112,7 +124,8 @@ $branches = $pdo->query("SELECT * FROM branches ORDER BY branch_name")->fetchAll
                         <td><?= htmlspecialchars($t['branch_name']) ?></td>
                         <td class="item-price">₱<?= number_format($t['total_amount'], 2) ?></td>
                         <td><?= htmlspecialchars($t['method_name']) ?></td>
-                        <td>
+                        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= htmlspecialchars($t['staff']) ?></td>
+                        <td style="text-align: center;">
                             <span class="status-badge status-completed">
                                 <i class="fas fa-check-circle"></i> Completed
                             </span>
@@ -121,7 +134,7 @@ $branches = $pdo->query("SELECT * FROM branches ORDER BY branch_name")->fetchAll
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
                             <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
                             No transactions found
                         </td>

@@ -13,6 +13,7 @@
             <div class="topnav-dropdown-menu" id="userDropdownMenu">
                 <a href="profile.php"><i class="fas fa-user"></i> Profile</a>
                 <a href="staff_management.php"><i class="fas fa-user-check"></i> Staffs</a>
+                <a href="branch_management.php"><i class="fas fa-code-branch"></i> Branches</a>
                 <a href="../logout.php" class="logout-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </div>
