@@ -36,40 +36,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         foreach($cart as $item) {
             $subtotal = $item['price'] * $item['qty'];
             
-            // Get item details from database
+            // Get item details from database using menu_item_id
             $stmt = $pdo->prepare("SELECT item_name, category, size FROM items WHERE item_id = ?");
-            $stmt->execute([$item['size_price_id']]);
+            $stmt->execute([$item['menu_item_id']]);
             $itemData = $stmt->fetch();
             
-            // Prepare addons JSON
-            $addons = [];
+            // Prepare addons in readable format
+            $addonsLines = [];
             $addonsTotal = 0;
             
             foreach(['toppings', 'sauces', 'fruits', 'extras'] as $type) {
                 if (!empty($item[$type])) {
                     foreach ($item[$type] as $addon) {
-                        $addons[] = [
-                            'type' => rtrim($type, 's'),
-                            'name' => $addon['name'],
-                            'price' => $addon['price']
-                        ];
+                        $addonsLines[] = "type: " . rtrim($type, 's') . ", name: " . $addon['name'] . ", price: " . $addon['price'];
                         $addonsTotal += $addon['price'] * $item['qty'];
                     }
                 }
             }
             
-            $addonsJson = !empty($addons) ? json_encode($addons) : null;
+            // Store "NONE" if no add-ons, otherwise store readable format
+            $addonsDetail = !empty($addonsLines) ? implode('; ', $addonsLines) : 'NONE';
             
             $stmt = $pdo->prepare("INSERT INTO transaction_items (transaction_id, item_id, item_name, category, size, base_price, quantity, addons_detail, addons_total, subtotal) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $transaction_id,
-                $item['size_price_id'],
+                $item['menu_item_id'],
                 $itemData['item_name'],
                 $itemData['category'],
                 $itemData['size'],
                 $item['base_price'],
                 $item['qty'],
-                $addonsJson,
+                $addonsDetail,
                 $addonsTotal,
                 $subtotal
             ]);

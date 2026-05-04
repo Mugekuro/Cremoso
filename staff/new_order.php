@@ -317,8 +317,9 @@ function addToCart() {
     const customizationPrice = [...toppings, ...sauces, ...fruits].reduce((sum, c) => sum + c.price, 0);
     const itemPrice = basePrice + customizationPrice;
     
+    // Use selectedSize.size_price_id as the menu_item_id since it's the actual item_id from the items table
     cart.push({
-        menu_item_id: currentItem.id,
+        menu_item_id: selectedSize.size_price_id,
         flavor_id: null,
         size_price_id: selectedSize.size_price_id,
         size_name: selectedSize.size_name,

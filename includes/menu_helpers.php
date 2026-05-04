@@ -59,16 +59,26 @@ function getTransactionItemCustomizations($transaction_item_id) {
     $stmt->execute([$transaction_item_id]);
     $result = $stmt->fetch();
     
-    if ($result && $result['addons_detail']) {
-        $addons = json_decode($result['addons_detail'], true);
-        if ($addons) {
-            foreach ($addons as $addon) {
+    if ($result && $result['addons_detail'] && $result['addons_detail'] !== 'NONE') {
+        // Parse the readable format: "type: topping, name: Mallows, price: 10; type: sauce, name: Chocolate, price: 20"
+        $addonItems = explode('; ', $result['addons_detail']);
+        
+        foreach ($addonItems as $addonItem) {
+            $parts = explode(', ', $addonItem);
+            $addon = [];
+            
+            foreach ($parts as $part) {
+                list($key, $value) = explode(': ', $part, 2);
+                $addon[$key] = $value;
+            }
+            
+            if (isset($addon['type']) && isset($addon['name']) && isset($addon['price'])) {
                 $type = $addon['type'] . 's';
                 if (isset($customizations[$type])) {
-                    $key = rtrim($type, 's') . '_name';
+                    $key = $addon['type'] . '_name';
                     $customizations[$type][] = [
                         $key => $addon['name'],
-                        'price' => $addon['price']
+                        'price' => floatval($addon['price'])
                     ];
                 }
             }

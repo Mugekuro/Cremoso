@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS transaction_items (
     size VARCHAR(50) NOT NULL COMMENT 'Snapshot of size',
     base_price DECIMAL(10,2) NOT NULL COMMENT 'Base price of item',
     quantity INT NOT NULL DEFAULT 1,
-    addons_detail TEXT NULL COMMENT 'JSON array of selected add-ons with names and prices',
+    addons_detail TEXT NOT NULL DEFAULT 'NONE' COMMENT 'JSON array of selected add-ons with names and prices, or "NONE" if no add-ons',
     addons_total DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Total of all add-ons',
     subtotal DECIMAL(10,2) NOT NULL COMMENT 'base_price * quantity + addons_total',
     notes TEXT NULL,
