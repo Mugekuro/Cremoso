@@ -175,7 +175,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
             <thead>
                 <tr>
                     <th>Order #</th>
-                    <th>Customer</th>
+                    <th style="text-align: center;">Customer</th>
                     <th>Branch</th>
                     <th>Total</th>
                     <th>Payment</th>
@@ -188,7 +188,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                 <?php foreach($recentTxns as $t): ?>
                 <tr>
                     <td><strong><?= htmlspecialchars($t['order_number']) ?></strong></td>
-                    <td><?= htmlspecialchars($t['customer_name']) ?></td>
+                    <td style="text-align: center; padding-left: 16px;"><?= htmlspecialchars($t['customer_name']) ?></td>
                     <td><?= htmlspecialchars($t['branch_name']) ?></td>
                     <td class="item-price">₱<?= number_format($t['total_amount'], 2) ?></td>
                     <td><?= htmlspecialchars($t['method_name']) ?></td>
