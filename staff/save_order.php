@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
             
-            // Store "NONE" if no add-ons, otherwise store readable format
-            $addonsDetail = !empty($addonsLines) ? implode('; ', $addonsLines) : 'NONE';
+            // Store "N/A" if no add-ons, otherwise store readable format
+            $addonsDetail = !empty($addonsLines) ? implode('; ', $addonsLines) : 'N/A';
             
             $stmt = $pdo->prepare("INSERT INTO transaction_items (transaction_id, item_id, item_name, category, size, base_price, quantity, addons_detail, addons_total, subtotal) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([

@@ -59,7 +59,7 @@ function getTransactionItemCustomizations($transaction_item_id) {
     $stmt->execute([$transaction_item_id]);
     $result = $stmt->fetch();
     
-    if ($result && $result['addons_detail'] && $result['addons_detail'] !== 'NONE') {
+    if ($result && $result['addons_detail'] && $result['addons_detail'] !== 'N/A') {
         // Parse the readable format: "type: topping, name: Mallows, price: 10; type: sauce, name: Chocolate, price: 20"
         $addonItems = explode('; ', $result['addons_detail']);
         
