@@ -1007,6 +1007,12 @@ body {
     border: 1px solid #FFCC80;
 }
 
+.status-cancelled {
+    background: rgba(231, 76, 60, 0.15);
+    color: #c0392b;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
 /* =============================
    ORDER LAYOUT
    ============================= */

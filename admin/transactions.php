@@ -9,7 +9,7 @@ $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
 // Build base WHERE clause
-$whereClause = "WHERE t.status = 'completed'";
+$whereClause = "WHERE 1=1";
 $params = [];
 if($filter_branch) { 
     $whereClause .= " AND t.branch_id = ?"; 
@@ -127,9 +127,23 @@ $branches = $pdo->query("SELECT * FROM branches ORDER BY branch_name")->fetchAll
                         <td><?= htmlspecialchars($t['method_name']) ?></td>
                         <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= htmlspecialchars($t['staff']) ?></td>
                         <td style="text-align: center;">
-                            <span class="status-badge status-completed">
-                                <i class="fas fa-check-circle"></i> Completed
-                            </span>
+                            <?php if($t['status'] === 'completed'): ?>
+                                <span class="status-badge status-completed">
+                                    <i class="fas fa-check-circle"></i> Completed
+                                </span>
+                            <?php elseif($t['status'] === 'pending'): ?>
+                                <span class="status-badge status-pending">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                            <?php elseif($t['status'] === 'cancelled'): ?>
+                                <span class="status-badge status-cancelled">
+                                    <i class="fas fa-times-circle"></i> Cancelled
+                                </span>
+                            <?php else: ?>
+                                <span class="status-badge">
+                                    <?= htmlspecialchars(ucfirst($t['status'])) ?>
+                                </span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -18,13 +18,13 @@ try {
     $todayData = $todayStats->fetch();
 }
 
-// Recent orders (only completed ones - with fallback)
+// Recent orders (today only, all statuses - with fallback)
 try {
     $recentOrders = $pdo->prepare("SELECT t.*, c.customer_name, pm.method_name
                                    FROM transactions t
                                    JOIN customers c ON t.customer_id = c.customer_id
                                    JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-                                   WHERE t.branch_id = ? AND t.status = 'completed'
+                                   WHERE t.branch_id = ? AND DATE(t.transaction_date) = CURDATE()
                                    ORDER BY t.transaction_date DESC LIMIT 5");
     $recentOrders->execute([$branch_id]);
     $recent = $recentOrders->fetchAll();
@@ -33,7 +33,7 @@ try {
                                    FROM transactions t
                                    JOIN customers c ON t.customer_id = c.customer_id
                                    JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-                                   WHERE t.branch_id = ?
+                                   WHERE t.branch_id = ? AND DATE(t.transaction_date) = CURDATE()
                                    ORDER BY t.transaction_date DESC LIMIT 5");
     $recentOrders->execute([$branch_id]);
     $recent = $recentOrders->fetchAll();
@@ -131,7 +131,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
     </div>
 
     <div class="data-table">
-        <h3 style="padding: 20px 20px 0; color: var(--text-dark);">Recent Orders</h3>
+        <h3 style="padding: 20px 20px 0; color: var(--text-dark);">Recent Orders (Today)</h3>
         <table>
             <thead>
                 <tr>
@@ -139,6 +139,7 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                     <th>Customer</th>
                     <th>Total</th>
                     <th>Payment</th>
+                    <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
                 </tr>
@@ -150,14 +151,35 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                     <td><?= htmlspecialchars($r['customer_name']) ?></td>
                     <td>₱<?= number_format($r['total_amount'], 2) ?></td>
                     <td><?= htmlspecialchars($r['method_name']) ?></td>
+                    <td><?= date('M d, Y', strtotime($r['transaction_date'])) ?></td>
                     <td><?= date('h:i A', strtotime($r['transaction_date'])) ?></td>
-                    <td><span class="status-badge status-completed">Completed</span></td>
+                    <td>
+                        <?php 
+                        $status = $r['status'] ?? 'completed';
+                        if($status === 'completed'): ?>
+                            <span class="status-badge status-completed">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </span>
+                        <?php elseif($status === 'pending'): ?>
+                            <span class="status-badge status-pending">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        <?php elseif($status === 'cancelled'): ?>
+                            <span class="status-badge status-cancelled">
+                                <i class="fas fa-times-circle"></i> Cancelled
+                            </span>
+                        <?php else: ?>
+                            <span class="status-badge">
+                                <?= htmlspecialchars(ucfirst($status)) ?>
+                            </span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if(count($recent) == 0): ?>
                 <tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fas fa-shopping-cart" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
-                    No orders yet today
+                    <i class="fas fa-info-circle" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
+                    No records for today
                 </td></tr>
                 <?php endif; ?>
             </tbody>

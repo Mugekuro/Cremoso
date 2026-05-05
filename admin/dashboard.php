@@ -15,13 +15,13 @@ $monthSales = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM transaction
 $salesGrowth = $yesterdaySales > 0 ? (($todaySales - $yesterdaySales) / $yesterdaySales) * 100 : 0;
 $ordersGrowth = $yesterdayOrders > 0 ? (($todayOrders - $yesterdayOrders) / $yesterdayOrders) * 100 : 0;
 
-// === RECENT TRANSACTIONS (paginated, up to 10) ===
+// === RECENT TRANSACTIONS (today only, paginated, up to 10) ===
 $search = $_GET['search'] ?? '';
 $txn_page = isset($_GET['txn_page']) ? max(1, (int)$_GET['txn_page']) : 1;
 $txn_perPage = 10;
 $txn_offset = ($txn_page - 1) * $txn_perPage;
 
-$whereClause = "WHERE 1=1";
+$whereClause = "WHERE DATE(t.transaction_date) = CURDATE()";
 $params = [];
 if ($search) {
     $whereClause .= " AND (t.order_number LIKE ? OR c.customer_name LIKE ? OR b.branch_name LIKE ? OR pm.method_name LIKE ?)";
@@ -157,10 +157,9 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
     </div>
 
     <!-- Recent Transactions -->
-    <?php if (count($recentTxns) > 0 || $search): ?>
     <div class="data-table dashboard-flat-table" style="margin-top: 24px;">
         <h3 style="padding: 20px 20px 0; color: var(--text-dark); font-weight: bold;">
-            <i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i>Recent Transactions
+            <i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i>Recent Transactions (Today)
         </h3>
         <table style="table-layout: fixed; width: 100%;">
             <colgroup>
@@ -200,8 +199,8 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
                 <?php endforeach; ?>
                 <?php if (count($recentTxns) == 0): ?>
                 <tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fas fa-search" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
-                    No transactions found
+                    <i class="fas fa-info-circle" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
+                    <?= $search ? 'No transactions found' : 'No records for today' ?>
                 </td></tr>
                 <?php endif; ?>
             </tbody>
@@ -243,7 +242,6 @@ if (isset($_SESSION['just_logged_in']) && $_SESSION['just_logged_in'] === true) 
             <?php endif; ?>
         </div>
     </div>
-    <?php endif; ?>
     <?php endif; ?>
 
 </div>
