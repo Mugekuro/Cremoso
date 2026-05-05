@@ -34,5 +34,9 @@ try {
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </a>
+        <a href="../logout.php" class="mobile-nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
     </div>
 </nav>
