@@ -58,12 +58,12 @@ Get Cremoso running in 5 minutes:
 | **Staff** | `staff1` | `staff1` | HQ Main |
 | **Staff** | `staff2` | `staff2` | Downtown Branch |
 
-> 💡 **Note**: For detailed setup including Google OAuth, see [Installation](#️-installation) section.
+> **Note**: For detailed setup including Google OAuth, see [Installation](#️-installation) section.
 
 ---
 
 
-## ⚙️ Installation
+## Installation
 
 ### Step 1: Clone the Repository
 
@@ -89,7 +89,7 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 GOOGLE_REDIRECT_URI=http://localhost:8000/google_callback.php
 ```
 
-> ⚠️ **Important**: 
+> **Important**: 
 > - For local development, use `http://localhost:8000/google_callback.php`
 > - For production, update to your actual domain (e.g., `https://yourdomain.com/google_callback.php`)
 > - See [Google OAuth Setup](#google-oauth-setup) for obtaining credentials
